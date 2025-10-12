@@ -11,37 +11,21 @@ interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
-  timestamp: Date;
+  timestamp: Date | string;
 }
 
-// Mock bot responses
-const BOT_RESPONSES: Record<string, string> = {
-  permit: 'You can apply for permits at city.gov/permits or visit City Hall at 123 Main St. You\'ll need ID, proof of residence, and the application fee.',
-  pothole: 'To report a pothole, go to the Home tab and click "Report Issue". Select "Roads" as the category and mark the location on the map.',
-  hours: 'City offices are open Monday-Friday, 9:00 AM - 5:00 PM. We\'re closed on weekends and public holidays.',
-  complaint: 'To file a complaint, you can use the Home tab to report issues or call our hotline at (555) 123-4567.',
-  payment: 'You can pay bills online at city.gov/payments, by mail, or in person at City Hall during business hours.',
-  default: 'I\'m here to help with permits, issue reporting, office hours, payments, and general inquiries. What would you like to know?',
-};
-
 const QUICK_ACTIONS = [
-  { label: 'Apply for Permit', keyword: 'permit' },
-  { label: 'Report Pothole', keyword: 'pothole' },
-  { label: 'Office Hours', keyword: 'hours' },
-  { label: 'File Complaint', keyword: 'complaint' },
+  { label: 'Apply for Permit', keyword: 'apply for permit' },
+  { label: 'Report Pothole', keyword: 'report pothole' },
+  { label: 'Office Hours', keyword: 'office hours' },
+  { label: 'File Complaint', keyword: 'file complaint' },
 ];
 
 const Chatbot = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! I\'m your CivicHub assistant. I can help you with permits, reporting issues, office hours, and more. How can I assist you today?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionId] = useState(() => `session-${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -52,22 +36,68 @@ const Chatbot = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getBotResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    for (const [keyword, response] of Object.entries(BOT_RESPONSES)) {
-      if (lowerMessage.includes(keyword)) {
-        return response;
+  useEffect(() => {
+    // Load history on mount
+    loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      console.log('📚 Loading chat history for session:', sessionId);
+      const res = await fetch(`/api/chat/history/${sessionId}`);
+      if (!res.ok) {
+        console.log('No history found or error loading history');
+        // show a default welcome message
+        setMessages([
+          {
+            id: 'welcome',
+            text: "Hello! I'm your CivicHub assistant. I can help you with permits, reporting issues, office hours, and more. How can I assist you today?",
+            sender: 'bot',
+            timestamp: new Date(),
+          },
+        ]);
+        return;
       }
+
+      const data = await res.json();
+      console.log('📚 History data:', data);
+      if (data && Array.isArray(data.messages) && data.messages.length > 0) {
+        // convert messages from {role, content, timestamp} to this page's shape
+        const conv = data.messages.map((m: any, idx: number) => ({
+          id: `${idx}-${m.timestamp || idx}`,
+          text: m.content || m.text || '',
+          sender: m.role === 'user' ? 'user' : 'bot',
+          timestamp: m.timestamp || new Date(),
+        }));
+        setMessages(conv);
+      } else {
+        setMessages([
+          {
+            id: 'welcome',
+            text: "Hello! I'm your CivicHub assistant. I can help you with permits, reporting issues, office hours, and more. How can I assist you today?",
+            sender: 'bot',
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error('Failed to load history', err);
+      setMessages([
+        {
+          id: 'welcome',
+          text: "Hello! I'm your CivicHub assistant. I can help you with permits, reporting issues, office hours, and more. How can I assist you today?",
+          sender: 'bot',
+          timestamp: new Date(),
+        },
+      ]);
     }
-    
-    return BOT_RESPONSES.default;
   };
 
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
-    // Add user message
+    // Add user message locally
     const userMessage: Message = {
       id: Date.now().toString(),
       text: text.trim(),
@@ -79,19 +109,48 @@ const Chatbot = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate bot typing and response
-    setTimeout(() => {
-      const botResponse = getBotResponse(text);
+    try {
+      console.log('🚀 Sending message to backend (page chatbot):', text);
+      console.log('📍 Session ID:', sessionId);
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId }),
+      });
+
+      console.log('📡 Response status:', res.status);
+
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error('API error:', txt);
+        throw new Error('API error');
+      }
+
+      const data = await res.json();
+      console.log('✅ Received data:', data);
+
+      const botReply = (data && (data.response || data.reply || data.aiResponse)) || 'Sorry, I could not get a reply.';
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: botResponse,
+        text: botReply,
         sender: 'bot',
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, botMessage]);
+    } catch (err) {
+      console.error('Chat send error', err);
+      setMessages((prev) => [...prev, {
+        id: `err-${Date.now()}`,
+        text: 'Sorry, there was an error contacting the assistant. Please try again.',
+        sender: 'bot',
+        timestamp: new Date(),
+      }] );
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -100,6 +159,7 @@ const Chatbot = () => {
   };
 
   const handleQuickAction = (keyword: string) => {
+    // Use the keyword as a short user message and call the backend
     sendMessage(keyword);
   };
 
@@ -156,7 +216,7 @@ const Chatbot = () => {
               >
                 <p className="text-sm leading-relaxed">{message.text}</p>
                 <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </motion.div>
