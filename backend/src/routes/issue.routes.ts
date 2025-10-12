@@ -20,11 +20,16 @@ router.get('/:id', getIssue);
 // Protected (create/update/delete)
 router.post(
   '/',
+  authenticate,
   [
-    body('title').isString().notEmpty(),
-    body('description').isString().notEmpty(),
-    body('category').optional().isString(),
-    body('priority').optional().isString(),
+    body('title').isString().trim().notEmpty().withMessage('Title is required'),
+    body('description').isString().trim().notEmpty().withMessage('Description is required'),
+    body('category').optional().isString().trim(),
+    body('priority').optional().isString().trim(),
+    body('location').optional().isObject(),
+    body('images').optional().isArray(),
+    body('aiSummary').optional().isString(),
+    body('submissionStatus').optional().isString(),
   ],
   createIssue
 );

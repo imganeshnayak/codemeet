@@ -47,6 +47,10 @@ const Home = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [communityIssues, setCommunityIssues] = useState<any[]>([]);
   const [loadingIssues, setLoadingIssues] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<any>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -114,7 +118,8 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: systemPrompt + '\n\n' + userPrompt,
-          sessionId: 'report-gen-' + Date.now()
+          sessionId: 'report-gen-' + Date.now(),
+          ignoreHistory: true  // Don't use chat history for report generation
         })
       });
       if (res.ok) {
@@ -160,7 +165,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
   const handleVote = async (issueId: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('jan_awaaz_token');
       if (!token) {
         toast({ title: 'Authentication Required', description: 'Please log in to vote.', variant: 'destructive' });
         return;
@@ -178,12 +183,88 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         toast({ title: 'Vote Recorded!', description: 'Your vote has been counted.' });
         // Reload issues to reflect new vote count
         loadCommunityIssues();
+        // If detail dialog is open, refresh the selected issue
+        if (selectedIssue && selectedIssue._id === issueId) {
+          const issueRes = await fetch(`/api/issues/${issueId}`);
+          if (issueRes.ok) {
+            const issueData = await issueRes.json();
+            setSelectedIssue(issueData.data.issue);
+          }
+        }
       } else {
         const err = await res.json();
         toast({ title: 'Error', description: err.message || 'Failed to vote', variant: 'destructive' });
       }
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to vote', variant: 'destructive' });
+    }
+  };
+
+  const handleViewDetails = async (issueId: string) => {
+    try {
+      const res = await fetch(`/api/issues/${issueId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedIssue(data.data.issue);
+        setIsDetailDialogOpen(true);
+      } else {
+        toast({ title: 'Error', description: 'Failed to load issue details', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to load issue details', variant: 'destructive' });
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!commentText.trim()) {
+      toast({ title: 'Error', description: 'Comment cannot be empty', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setIsSubmittingComment(true);
+      const token = localStorage.getItem('jan_awaaz_token');
+      if (!token) {
+        toast({ title: 'Authentication Required', description: 'Please log in to comment.', variant: 'destructive' });
+        return;
+      }
+
+      const res = await fetch(`/api/issues/${selectedIssue._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          comments: [
+            ...selectedIssue.comments,
+            {
+              user: JSON.parse(localStorage.getItem('jan_awaaz_user') || '{}').id,
+              text: commentText,
+              createdAt: new Date(),
+            }
+          ]
+        }),
+      });
+
+      if (res.ok) {
+        toast({ title: 'Comment Added!', description: 'Your comment has been posted.' });
+        setCommentText('');
+        // Refresh issue details
+        const issueRes = await fetch(`/api/issues/${selectedIssue._id}`);
+        if (issueRes.ok) {
+          const issueData = await issueRes.json();
+          setSelectedIssue(issueData.data.issue);
+        }
+        loadCommunityIssues();
+      } else {
+        const err = await res.json();
+        toast({ title: 'Error', description: err.message || 'Failed to add comment', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to add comment', variant: 'destructive' });
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -220,49 +301,65 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                   transition={{ delay: index * 0.05 }}
                 >
                   <Card className="p-4 hover:shadow-lg smooth-transition">
-                    <div className="flex items-start justify-between mb-3">
-                      <Badge className={statusColors[issue.status] || 'status-pending'}>
-                        {issue.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(issue.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    
-                    <h3 className="font-semibold mb-2">{issue.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {issue.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          <span className="line-clamp-1">
-                            {issue.location?.address || 'Location not specified'}
-                          </span>
-                        </div>
+                    <div 
+                      className="cursor-pointer" 
+                      onClick={() => handleViewDetails(issue._id)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <Badge className={statusColors[issue.status] || 'status-pending'}>
+                          {issue.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(issue.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {issue.category}
-                      </Badge>
+                      
+                      <h3 className="font-semibold mb-2">{issue.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {issue.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            <span className="line-clamp-1">
+                              {issue.location?.address || 'Location not specified'}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {issue.category}
+                        </Badge>
+                      </div>
                     </div>
 
-                    {/* Vote Button */}
+                    {/* Vote and Comment Buttons */}
                     <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>{issue.votes || 0} votes</span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <ThumbsUp className="w-4 h-4" />
+                          <span>{issue.votes || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MessageCircle className="w-4 h-4" />
+                          <span>{issue.comments?.length || 0}</span>
+                        </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleVote(issue._id)}
-                        className="gap-1"
-                      >
-                        <ThumbsUp className="w-3 h-3" />
-                        Vote
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVote(issue._id);
+                          }}
+                          className="gap-1"
+                        >
+                          <ThumbsUp className="w-3 h-3" />
+                          Vote
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 </motion.div>
@@ -292,44 +389,58 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                       className="h-full"
                     >
                       <Card className="p-4 hover:shadow-lg smooth-transition h-full">
-                        <div className="flex items-start justify-between mb-3">
-                          <Badge className={statusColors[issue.status] || 'status-pending'}>
-                            {issue.status}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(issue.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        
-                        <h3 className="font-semibold mb-2">{issue.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                          {issue.description}
-                        </p>
-                        
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              <span className="line-clamp-1">
-                                {issue.location?.address || 'Location not specified'}
-                              </span>
-                            </div>
+                        <div 
+                          className="cursor-pointer flex flex-col h-full" 
+                          onClick={() => handleViewDetails(issue._id)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <Badge className={statusColors[issue.status] || 'status-pending'}>
+                              {issue.status}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(issue.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {issue.category}
-                          </Badge>
+                          
+                          <h3 className="font-semibold mb-2">{issue.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {issue.description}
+                          </p>
+                          
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                <span className="line-clamp-1">
+                                  {issue.location?.address || 'Location not specified'}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {issue.category}
+                            </Badge>
+                          </div>
                         </div>
 
-                        {/* Vote Button */}
+                        {/* Vote and Comment Buttons */}
                         <div className="mt-auto pt-4 border-t flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <ThumbsUp className="w-4 h-4" />
-                            <span>{issue.votes || 0} votes</span>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <ThumbsUp className="w-4 h-4" />
+                              <span>{issue.votes || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MessageCircle className="w-4 h-4" />
+                              <span>{issue.comments?.length || 0}</span>
+                            </div>
                           </div>
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => handleVote(issue._id)}
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVote(issue._id);
+                            }}
                             className="gap-1"
                           >
                             <ThumbsUp className="w-3 h-3" />
@@ -549,6 +660,163 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
       {/* Chatbot Component */}
       <Chatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
+      {/* Issue Detail Dialog */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedIssue && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <DialogTitle className="text-2xl mb-2">{selectedIssue.title}</DialogTitle>
+                    <DialogDescription className="flex items-center gap-2 flex-wrap">
+                      <Badge className={statusColors[selectedIssue.status] || 'status-pending'}>
+                        {selectedIssue.status}
+                      </Badge>
+                      <Badge variant="outline">{selectedIssue.category}</Badge>
+                      <Badge variant="outline">{selectedIssue.priority} priority</Badge>
+                      <span className="text-xs">
+                        {new Date(selectedIssue.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {/* Description */}
+                <div>
+                  <h3 className="font-semibold mb-2">Description</h3>
+                  <p className="text-muted-foreground">{selectedIssue.description}</p>
+                </div>
+
+                {/* AI Summary */}
+                {selectedIssue.aiSummary && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Official Report Summary</h3>
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <p className="text-sm whitespace-pre-line">{selectedIssue.aiSummary}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Location */}
+                <div>
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Location
+                  </h3>
+                  <p className="text-muted-foreground">{selectedIssue.location?.address || 'Address not specified'}</p>
+                  {selectedIssue.location?.coordinates && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Coordinates: {selectedIssue.location.coordinates[1]}, {selectedIssue.location.coordinates[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* Images */}
+                {selectedIssue.images && selectedIssue.images.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Photos</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {selectedIssue.images.map((img: string, idx: number) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt={`Issue photo ${idx + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Vote Section */}
+                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                    <span className="font-semibold">{selectedIssue.votes || 0} votes</span>
+                  </div>
+                  <Button
+                    onClick={() => handleVote(selectedIssue._id)}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                    Vote for this issue
+                  </Button>
+                </div>
+
+                {/* Comments Section */}
+                <div>
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    Comments ({selectedIssue.comments?.length || 0})
+                  </h3>
+                  
+                  {/* Comment Input */}
+                  <div className="mb-4">
+                    <Textarea
+                      placeholder="Add a comment..."
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      rows={3}
+                      className="mb-2"
+                    />
+                    <Button
+                      onClick={handleSubmitComment}
+                      disabled={isSubmittingComment || !commentText.trim()}
+                      className="gap-2"
+                    >
+                      {isSubmittingComment ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        <>
+                          <MessageCircle className="w-4 h-4" />
+                          Post Comment
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Comments List */}
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {selectedIssue.comments && selectedIssue.comments.length > 0 ? (
+                      selectedIssue.comments.map((comment: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-muted/30 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <span className="font-medium text-sm">User</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{comment.text}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-muted-foreground py-4">
+                        No comments yet. Be the first to comment!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

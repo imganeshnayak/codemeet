@@ -8,7 +8,12 @@ export const createIssue = async (req: Request, res: Response): Promise<void> =>
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.error('Validation errors:', errors.array());
-      res.status(400).json({ success: false, errors: errors.array() });
+      console.error('Request body:', req.body);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed',
+        errors: errors.array() 
+      });
       return;
     }
 
@@ -35,7 +40,9 @@ export const createIssue = async (req: Request, res: Response): Promise<void> =>
       submissionStatus
     });
 
+
     const reporter = reportedBy || (req as any).user?.userId || undefined; // optional
+    console.log('DEBUG: reporter value:', reporter);
 
     // If submissionStatus is 'submitted', set submittedAt timestamp
     const issueData: any = {
@@ -46,8 +53,10 @@ export const createIssue = async (req: Request, res: Response): Promise<void> =>
       location,
       images: images || [],
       reportedBy: reporter,
-      submissionStatus: submissionStatus || 'draft'
+      submissionStatus: submissionStatus || 'draft',
+      status: 'pending', // Always set status to 'pending' for new issues
     };
+    console.log('DEBUG: issueData.reportedBy:', issueData.reportedBy);
 
     if (aiSummary) {
       issueData.aiSummary = aiSummary;

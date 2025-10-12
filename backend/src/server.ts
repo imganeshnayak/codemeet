@@ -12,6 +12,8 @@ import chatRoutes from './routes/chat.routes';
 import debugRoutes from './routes/debug.routes';
 import homeRoutes from './routes/home.routes';
 import seedRoutes from './routes/seed.routes';
+import communityRoutes from './routes/community.routes';
+import profileRoutes from './routes/profile.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Initialize express app
@@ -41,6 +43,8 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/communities', communityRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
