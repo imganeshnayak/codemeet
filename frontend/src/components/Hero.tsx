@@ -25,19 +25,21 @@ const Hero = ({ hero }: HeroProps) => {
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
-        {/* Gradient Overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent"></div>
+  {/* Dark gradient overlay (top black -> transparent) to match design */}
+  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
       </div>
 
       {/* Hero Content - Bottom Left Positioning */}
       <div className="relative z-10 h-full flex items-end">
         <div className="container pb-20 md:pb-32">
           <div className="max-w-3xl animate-fade-in-slow">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 text-white text-shadow leading-tight">
-              {hero.title}
+            <h1 className="text-[50px] font-bold mb-6 text-white text-shadow leading-tight">
+              A Smart Platform that bridges Citizens and Authorities.
+              <br />
+              Report.Track.Resolve.
             </h1>
-            <p className="text-lg md:text-xl lg:text-2xl mb-8 text-white/90 text-shadow font-light max-w-2xl">
-              {hero.subtitle}
+            <p className="text-base md:text-lg lg:text-xl mb-8 text-white/90 text-shadow font-light max-w-2xl">
+              Empowering citizens with a smart, transparent, and collaborative platform for civic issue reporting and resolution.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/signup">
@@ -57,7 +59,7 @@ const Hero = ({ hero }: HeroProps) => {
                   className="text-base md:text-lg px-8 py-6 h-auto bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white"
                 >
                   <Play className="mr-2" />
-                  Watch Demo
+                  Login
                 </Button>
               </Link>
             </div>

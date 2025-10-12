@@ -7,30 +7,56 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 
 
+const defaultData = {
+  hero: {
+    title: 'Report issues. Track progress. Make a difference.',
+    subtitle: 'Smart, simple civic reporting for your community',
+    cta: 'Get Started',
+  },
+  features: [
+    { title: 'Report', description: 'Quickly report issues in your neighborhood.' },
+    { title: 'Track', description: 'Monitor progress as issues are resolved.' },
+    { title: 'Engage', description: 'Connect with your community and officials.' },
+  ],
+  howItWorks: [
+    { title: 'Report an Issue', description: 'Describe the problem and attach photos.' },
+    { title: 'Assign & Track', description: 'Officials receive and act on reports.' },
+    { title: 'Resolve & Close', description: 'See the resolution and close the loop.' },
+  ],
+};
+
 const Index = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/home")
+    let mounted = true;
+    fetch('/api/home')
       .then((res) => res.json())
       .then((json) => {
-        if (json.success) {
+        if (!mounted) return;
+        if (json && json.success && json.data) {
+          setData(json.data);
+        } else if (json && json.data) {
           setData(json.data);
         } else {
-          setError(json.message || "Failed to load home page data");
+          // fallback to default if API returns unexpected shape
+          setData(defaultData);
         }
-        setLoading(false);
       })
-      .catch((err) => {
-        setError("Failed to load home page data");
-        setLoading(false);
+      .catch(() => {
+        // On any fetch error, use static fallback so the homepage still renders
+        if (mounted) setData(defaultData);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
       });
+
+    return () => { mounted = false; };
   }, []);
 
   if (loading) return <div className="text-center py-32">Loading...</div>;
-  if (error) return <div className="text-center py-32 text-red-500">{error}</div>;
+  if (!data) return <div className="text-center py-32 text-red-500">Failed to load home page</div>;
 
   return (
     <main className="min-h-screen">

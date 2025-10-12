@@ -1,5 +1,6 @@
 
 import { iconMap } from "@/lib/iconMap";
+import { useEffect, useRef } from "react";
 
 type HowItWorksProps = {
   steps: Array<{
@@ -11,6 +12,30 @@ type HowItWorksProps = {
 };
 
 const HowItWorks = ({ steps }: HowItWorksProps) => {
+  const stepsRef = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const el = entry.target as HTMLElement;
+          if (entry.isIntersecting) {
+            el.classList.add("animate-slide-in-left");
+          } else {
+            el.classList.remove("animate-slide-in-left");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    stepsRef.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="py-24 md:py-32 bg-gradient-to-b from-background to-card">
       <div className="container">
@@ -29,8 +54,9 @@ const HowItWorks = ({ steps }: HowItWorksProps) => {
             return (
               <div
                 key={index}
-                className="relative animate-fade-in"
-                style={{ animationDelay: `${index * 0.15}s` }}
+                className="relative"
+                ref={(el) => (stepsRef.current[index] = el)}
+                style={{ animationDelay: `${index * 150}ms` }}
               >
                 <div className="text-center">
                   <div className="mb-6 inline-flex flex-col items-center">

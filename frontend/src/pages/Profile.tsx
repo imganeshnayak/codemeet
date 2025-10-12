@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Bell, Moon, Sun, LogOut, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,30 @@ const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('dark-mode');
+      if (stored !== null) return stored === 'true';
+    } catch (e) {
+      // ignore
+    }
+    return document.documentElement.classList.contains('dark');
+  });
+
+  // Apply theme class and persist preference
+  useEffect(() => {
+    try {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('dark-mode', 'true');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('dark-mode', 'false');
+      }
+    } catch (e) {
+      // ignore localStorage errors
+    }
+  }, [isDarkMode]);
   const [notifications, setNotifications] = useState({
     emailUpdates: true,
     pushNotifications: true,
