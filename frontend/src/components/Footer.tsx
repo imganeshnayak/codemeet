@@ -1,6 +1,7 @@
 import { Github, Twitter, Linkedin } from "lucide-react";
 import { motion } from 'framer-motion';
 
+// --- Utility: The main Footer component ---
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -145,4 +146,17 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+// --- Main App Component to render the Footer ---
+const App = () => {
+  return (
+    <div className="min-h-screen bg-white font-sans">
+        {/* Filler content adjusted to ensure scrolling is required to see the footer */}
+        <div className="h-[150vh] flex items-center justify-center">
+            <h1 className="text-3xl font-light text-gray-400">Scroll Down to See Footer Pop Up</h1>
+        </div>
+        <Footer />
+    </div>
+  )
+}
+
+export default App;

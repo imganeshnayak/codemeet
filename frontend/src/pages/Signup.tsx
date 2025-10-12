@@ -48,7 +48,7 @@ const Signup = () => {
       if (success) {
         toast({
           title: 'Account created!',
-          description: 'Welcome to CivicHub. Redirecting to your dashboard...',
+          description: 'Welcome to Jan Awaaz. Redirecting to your dashboard...',
         });
         navigate('/home');
       } else {
@@ -82,7 +82,7 @@ const Signup = () => {
             <span className="text-3xl">🏙️</span>
           </div>
           <div>
-            <h1 className="font-bold text-2xl">CivicHub</h1>
+            <h1 className="font-bold text-2xl">Jan Awaaz</h1>
             <p className="text-sm text-muted-foreground">City Services Platform</p>
           </div>
         </Link>
@@ -91,7 +91,7 @@ const Signup = () => {
           <CardHeader>
             <CardTitle>Create Account</CardTitle>
             <CardDescription>
-              Join CivicHub to report issues and engage with your community
+              Join Jan Awaaz to report issues and engage with your community
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>

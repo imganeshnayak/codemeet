@@ -22,7 +22,6 @@ const chatHistorySchema = new Schema<IChatHistory>(
     sessionId: {
       type: String,
       required: true,
-      index: true,
     },
     messages: [
       {
@@ -50,6 +49,5 @@ const chatHistorySchema = new Schema<IChatHistory>(
 
 // Index for faster queries
 chatHistorySchema.index({ userId: 1, createdAt: -1 });
-chatHistorySchema.index({ sessionId: 1 });
 
 export default mongoose.model<IChatHistory>('ChatHistory', chatHistorySchema);

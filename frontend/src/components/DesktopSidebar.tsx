@@ -25,11 +25,11 @@ const DesktopSidebar = () => {
       {/* Logo / Branding */}
       <div className="p-6 border-b border-border">
         <Link to="/home" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-2xl">🏙️</span>
+          <div className="w-10 h-10 rounded-lg overflow-hidden">
+            <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-10 h-10 object-cover" />
           </div>
           <div>
-            <h2 className="font-bold text-lg">CivicHub</h2>
+            <h2 className="font-bold text-lg">Jan Awaaz</h2>
             <p className="text-xs text-muted-foreground">City Services</p>
           </div>
         </Link>

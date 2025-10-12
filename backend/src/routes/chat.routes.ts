@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sendMessage, getChatHistory, clearChatHistory } from '../controllers/chatController';
+import { sendMessage, getChatHistory, clearChatHistory, healthCheck } from '../controllers/chatController';
 
 const router = Router();
 
@@ -7,5 +7,6 @@ const router = Router();
 router.post('/', sendMessage);
 router.get('/history/:sessionId', getChatHistory);
 router.delete('/history/:sessionId', clearChatHistory);
+router.get('/health', healthCheck);
 
 export default router;

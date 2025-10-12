@@ -37,8 +37,8 @@ const MOCK_USERS = [
 ];
 
 // LocalStorage keys
-const STORAGE_KEY_USER = 'civic_app_user';
-const STORAGE_KEY_TOKEN = 'civic_app_token';
+const STORAGE_KEY_USER = 'jan_awaaz_user';
+const STORAGE_KEY_TOKEN = 'jan_awaaz_token';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -63,62 +63,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const foundUser = MOCK_USERS.find(
-      u => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      const userData: User = {
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-        avatar: foundUser.avatar
-      };
-
-      // Generate mock token
-      const mockToken = `mock_token_${foundUser.id}_${Date.now()}`;
-
-      // Store in localStorage
-      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userData));
-      localStorage.setItem(STORAGE_KEY_TOKEN, mockToken);
-      
-      setUser(userData);
-      return true;
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const userData: User = {
+          id: data.data.user.id,
+          email: data.data.user.email,
+          name: data.data.user.name,
+          avatar: data.data.user.avatar
+        };
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userData));
+        localStorage.setItem(STORAGE_KEY_TOKEN, data.data.accessToken);
+        setUser(userData);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      return false;
     }
-
-    return false;
   };
 
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Check if user already exists
-    const existingUser = MOCK_USERS.find(u => u.email === email);
-    if (existingUser) {
-      return false; // User already exists
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const userData: User = {
+          id: data.data.user.id,
+          email: data.data.user.email,
+          name: data.data.user.name,
+          avatar: data.data.user.avatar
+        };
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userData));
+        localStorage.setItem(STORAGE_KEY_TOKEN, data.data.accessToken);
+        setUser(userData);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      return false;
     }
-
-    // Create new user (in real app, this would be saved to backend)
-    const newUser: User = {
-      id: `${Date.now()}`,
-      email,
-      name,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
-    };
-
-    // Generate mock token
-    const mockToken = `mock_token_${newUser.id}_${Date.now()}`;
-
-    // Store in localStorage
-    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
-    localStorage.setItem(STORAGE_KEY_TOKEN, mockToken);
-    
-    setUser(newUser);
-    return true;
   };
 
   const logout = () => {
