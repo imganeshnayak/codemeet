@@ -5,6 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import AdminLayout from "./admin/AdminLayout";
+import AdminProtectedRoute from "./admin/AdminProtectedRoute";
+import Dashboard from "./admin/Dashboard";
+import Users from "./admin/Users";
+import Issues from "./admin/Issues";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -43,6 +49,13 @@ const App = () => (
               
               {/* 404 Catch-all */}
               <Route path="*" element={<NotFound />} />
+
+              {/* Admin routes */}
+              <Route path="/admin" element={<AdminAuthProvider><AdminProtectedRoute><AdminLayout /></AdminProtectedRoute></AdminAuthProvider>}>
+                <Route index element={<Dashboard />} />
+                <Route path="users" element={<Users />} />
+                <Route path="issues" element={<Issues />} />
+              </Route>
             </Routes>
           </div>
         </BrowserRouter>

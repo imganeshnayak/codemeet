@@ -1,123 +1,131 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Instagram, X } from "lucide-react";
+import { Github, Twitter, Linkedin } from "lucide-react";
+import { motion } from 'framer-motion';
 
 // --- Utility: The main Footer component ---
 const Footer = () => {
-  // Hardcoding year and text based on the image reference (Fanvue)
-  const currentYear = 2025;
-  const [isVisible, setIsVisible] = useState(false);
-  const footerRef = useRef(null);
+  const currentYear = new Date().getFullYear();
 
-  // Intersection Observer setup to trigger the animation on scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When the footer enters the viewport
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          // Stop observing once visible
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        root: null, // Observe relative to the viewport
-        rootMargin: '0px',
-        threshold: 0.1, // Trigger when 10% of the element is visible
-      }
-    );
+  const outer = {
+    hidden: { opacity: 0, y: 24 },
+    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.06, duration: 0.6 } }
+  } as const;
 
-    if (footerRef.current) {
-      observer.observe(footerRef.current);
-    }
-
-    // Cleanup observer on unmount
-    return () => {
-      if (footerRef.current) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        observer.unobserve(footerRef.current);
-      }
-    };
-  }, []); // Empty dependency array means this runs once on mount
+  const inner = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.45 } }
+  } as const;
 
   return (
-    // The scroll animation class is applied here
-    <footer
-      ref={footerRef} // Attach the ref
-      className={`
-        py-16 bg-gray-200 text-gray-800 
-        transition-all duration-700 ease-out 
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}
-      `}
+    <motion.footer
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: false, amount: 0.18 }} // animate every time
+      variants={outer}
+      className="relative overflow-hidden"
     >
-      <div className="container mx-auto max-w-6xl px-4">
-        
-        {/* TOP SECTION: Heading, Button, and Connect Links */}
-        <div className="flex flex-col lg:flex-row justify-between lg:items-start mb-16 gap-12">
-          
-          {/* Main Heading and Marketing Text (Left Side) */}
-          <div className="flex-1 max-w-xl">
-            {/* Font styling to mimic the image's look (using font-serif/italic combination) */}
-            <h2 className="text-4xl sm:text-5xl font-serif leading-tight">
-              <span className="italic font-light">Join</span> <strong className="font-extrabold text-gray-900">THE FASTEST</strong> <span className="italic font-light">Growing</span> <strong className="font-extrabold text-gray-900">COMMUNITY OF CREATORS</strong>
-            </h2>
-          </div>
-
-          {/* Button and Connect Links (Right Side) */}
-          <div className="flex flex-col lg:items-end gap-12">
-             {/* Button */}
-            <a 
-              href="#" 
-              className="px-6 py-3 text-lg font-bold bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 ease-in flex items-center justify-center w-full lg:w-auto"
+      {/* Top hero-style section */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 py-10 md:py-14">
+        <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-6">
+          <motion.div variants={inner} className="md:col-span-8">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-slate-900 dark:text-white"
+              style={{ fontFamily: 'Georgia, ui-serif, serif' }}
             >
-              Become a member
-            </a>
-            
-            {/* Connect Section */}
-            <div>
-              <h4 className="font-semibold mb-4 text-xs tracking-widest uppercase text-gray-500">
-                Connect
-              </h4>
-              <ul className="space-y-4 text-base text-gray-800 font-semibold">
-                <li className="flex items-center space-x-2 hover:text-green-600 transition-colors duration-200">
-                  <Instagram className="h-5 w-5" />
-                  <a href="#">Instagram</a>
-                </li>
-                <li className="flex items-center space-x-2 hover:text-green-600 transition-colors duration-200">
-                  {/* Using X icon instead of plain span */}
-                  <X className="h-5 w-5" />
-                  <a href="#">X</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+              Report{' '}
+              <span className="font-semibold text-purple-600">Issues</span>
+              <br />
+              Track{' '}
+              <span className="font-semibold text-purple-600">Progress</span> 
+              Make a{' '}
+              <span className="font-semibold text-purple-600">Difference</span>
+            </h2>
+          </motion.div>
 
-        {/* BOTTOM SECTION: Logo/Details and Address */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-gray-300">
-            
-            {/* Logo and Tagline (Left - takes 2 columns) */}
-            <div className="md:col-span-2 flex flex-col sm:flex-row gap-6">
-                {/* Green Logo Placeholder */}
-                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-2xl font-bold shrink-0">
-                    <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
-                        {/* Simple 'F' like shape for placeholder (updated SVG path for a better fit) */}
-                        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 14h-2V7h2v9z" />
-                    </svg>
-                </div>
-                <p className="text-base text-gray-600 max-w-lg">
-                    The fastest growing platform in the creator economy. Sign up before the end of the month & take home 85%.
-                </p>
-            </div>
-        </div>
-        
-        {/* Copyright and Address Line */}
-        <div className="pt-8 text-xs text-gray-500 mt-8">
-            <p>
-                &copy; {currentYear} Fanvue, Shift Holdings LTD | 2nd Floor College House, 17 King Edwards Road, Ruislip, London, United Kingdom, HA4 7AE | 8 The Green STE R, Dover, 19901, Delaware, United States
-            </p>
+          <motion.div
+            variants={inner}
+            className="md:col-span-4 flex md:justify-end mt-6 md:mt-0"
+          >
+            <a
+              href="#"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-semibold shadow-lg hover:shadow-2xl transform transition hover:-translate-y-1 hover:scale-105"
+            >
+              Get Started
+            </a>
+          </motion.div>
         </div>
       </div>
-    </footer>
+
+      {/* Main footer content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 pb-12">
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-xl shadow-inner border border-slate-100/6 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 md:p-10">
+            {/* About Section */}
+            <motion.div variants={inner}>
+              <div className="flex items-center gap-4 mb-4">
+                <div>
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                    <img src="/awaaz logo .png" alt="Awaaz logo" className="w-20 h-20 object-cover rounded" />
+                    About Smart Issues
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                Smart Issues helps communities report problems, track resolutions, and drive real-world impact through transparent progress tracking.
+              </p>
+            </motion.div>
+
+            {/* Contact Section */}
+            <motion.div variants={inner}>
+              <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">Contact Us</h4>
+              <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                <li><a href="#" className="hover:text-indigo-400 transition-colors">Email Support</a></li>
+                <li><a href="#" className="hover:text-indigo-400 transition-colors">Community Forum</a></li>
+                <li><a href="#" className="hover:text-indigo-400 transition-colors">Feedback Form</a></li>
+              </ul>
+            </motion.div>
+
+            {/* Connect Section */}
+            <motion.div variants={inner}>
+              <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">Connect With Us</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-4">
+                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 hover:text-indigo-400 transition transform hover:scale-105">
+                  <Twitter className="h-6 w-6 bg-white/60 rounded p-1" />
+                  <span className="text-sm">Instagram</span>
+                </a>
+                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 hover:text-indigo-400 transition transform hover:scale-105">
+                  <svg className="h-6 w-6 bg-black text-white rounded p-1" viewBox="0 0 24 24" fill="none">
+                    <rect width="100%" height="100%" rx="3" fill="#111" />
+                    <path d="M7 7h10M7 12h10M7 17h10" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-sm">X</span>
+                </a>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="border-t border-slate-100/6 px-8 py-6">
+            <motion.div variants={inner} className="text-center text-sm text-slate-600 dark:text-slate-300">
+              <p>© {currentYear} Smart Issues. All rights reserved.</p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes float-slow { 
+          0% { transform: translateY(0px);} 
+          50% { transform: translateY(-6px);} 
+          100% { transform: translateY(0px);} 
+        }
+        @keyframes float { 
+          0% { transform: translateY(0px);} 
+          50% { transform: translateY(-6px);} 
+          100% { transform: translateY(0px);} 
+        }
+        .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+      `}</style>
+    </motion.footer>
   );
 };
 
