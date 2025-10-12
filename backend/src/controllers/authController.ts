@@ -20,12 +20,14 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
       return;
     }
 
+
     // Create new user
     const user = await User.create({
       name,
       email,
       password,
     });
+    console.log('✅ User created and saved to DB:', user);
 
     // Generate tokens
     const accessToken = generateAccessToken({
