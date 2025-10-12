@@ -1,4 +1,6 @@
+// ...existing code...
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -97,10 +99,12 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.8s ease-out",
         "fade-in-slow": "fade-in-slow 1.2s ease-out",
+        // ease-in footer animation (keeps final state)
+        "fade-in-ease": "fade-in 0.7s ease-in both",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
         "float": "float 6s ease-in-out infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 } satisfies Config;

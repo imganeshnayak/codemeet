@@ -35,7 +35,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your CivicHub assistant. I can help you with permits, reporting issues, office hours, and more. How can I assist you today?',
+      text: 'Hello! I\'m your Jan Awaaz assistant. I can help you with permits, reporting issues, office hours, and more. How can I assist you today?',
       sender: 'bot',
       timestamp: new Date(),
     },
@@ -113,7 +113,7 @@ const Chatbot = () => {
               <Sparkles className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Civic Assistant</h1>
+              <h1 className="text-2xl font-bold">Jan awaaz Assistant</h1>
               <p className="text-sm text-muted-foreground">AI-powered city services helper</p>
             </div>
           </div>

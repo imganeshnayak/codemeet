@@ -37,8 +37,8 @@ const MOCK_USERS = [
 ];
 
 // LocalStorage keys
-const STORAGE_KEY_USER = 'civic_app_user';
-const STORAGE_KEY_TOKEN = 'civic_app_token';
+const STORAGE_KEY_USER = 'jan_awaaz_user';
+const STORAGE_KEY_TOKEN = 'jan_awaaz_token';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

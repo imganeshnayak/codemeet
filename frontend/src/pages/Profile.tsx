@@ -297,7 +297,7 @@ const Profile = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Appearance</CardTitle>
-                  <CardDescription>Customize how CivicHub looks</CardDescription>
+                  <CardDescription>Customize how Jan Awaaz looks</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
