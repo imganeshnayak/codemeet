@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Light grey modern theme */
+    --background: 220 15% 96%;
+    --foreground: 220 20% 15%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 220 20% 15%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 220 20% 15%;
+
+    /* Muted tones with soft glow accents */
+    --primary: 250 60% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 250 70% 70%;
+
+    --secondary: 220 15% 88%;
+    --secondary-foreground: 220 20% 25%;
+
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 12% 45%;
+
+    --accent: 280 55% 60%;
+    --accent-foreground: 0 0% 100%;
+    --accent-glow: 280 70% 75%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 90%;
+    --ring: 250 60% 55%;
+
+    --radius: 0.75rem;
+
+    /* Premium shadows and glows */
+    --shadow-soft: 0 2px 20px -5px hsl(220 20% 15% / 0.08);
+    --shadow-medium: 0 8px 30px -10px hsl(220 20% 15% / 0.12);
+    --shadow-text: 0 2px 8px hsl(220 20% 5% / 0.6);
+    --glow-primary: 0 0 40px hsl(var(--primary-glow) / 0.4);
+    --glow-accent: 0 0 40px hsl(var(--accent-glow) / 0.3);
+
+    /* Transitions */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* App-specific Layout */
+    --nav-height: 4rem;
+    --sidebar-width: 16rem;
+    --content-max-width: 1400px;
+
+    /* Chat & Messaging */
+    --chat-bubble-sent: 250 60% 55%;
+    --chat-bubble-received: 0 0% 100%;
+    --chat-bubble-sent-text: 0 0% 100%;
+    --chat-bubble-received-text: 220 20% 15%;
+
+    /* Status Colors */
+    --status-pending: 45 93% 58%;
+    --status-in-progress: 217 91% 60%;
+    --status-resolved: 142 71% 45%;
+    --status-rejected: 0 70% 55%;
+
+    /* Notification & Badges */
+    --notification-dot: 0 84% 60%;
+    --badge-success: 142 71% 45%;
+    --badge-warning: 45 93% 58%;
+    --badge-error: 0 84% 60%;
+
+    /* Map */
+    --map-marker-pending: #F59E0B;
+    --map-marker-progress: #3B82F6;
+    --map-marker-resolved: #10B981;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: var(--shadow-text);
+  }
+
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+
+  .smooth-transition {
+    transition: var(--transition-smooth);
+  }
+
+  .slow-transition {
+    transition: var(--transition-slow);
+  }
+
+  /* Navigation & Layout */
+  .mobile-nav-height {
+    height: var(--nav-height);
+  }
+
+  .sidebar-width {
+    width: var(--sidebar-width);
+  }
+
+  .content-with-nav {
+    padding-bottom: var(--nav-height);
+  }
+
+  .content-with-sidebar {
+    padding-left: var(--sidebar-width);
+  }
+
+  /* Chat Bubbles */
+  .chat-bubble-sent {
+    background: hsl(var(--chat-bubble-sent));
+    color: hsl(var(--chat-bubble-sent-text));
+  }
+
+  .chat-bubble-received {
+    background: hsl(var(--chat-bubble-received));
+    color: hsl(var(--chat-bubble-received-text));
+  }
+
+  /* Status Badges */
+  .status-pending {
+    background: hsl(var(--status-pending) / 0.1);
+    color: hsl(var(--status-pending));
+    border: 1px solid hsl(var(--status-pending) / 0.3);
+  }
+
+  .status-in-progress {
+    background: hsl(var(--status-in-progress) / 0.1);
+    color: hsl(var(--status-in-progress));
+    border: 1px solid hsl(var(--status-in-progress) / 0.3);
+  }
+
+  .status-resolved {
+    background: hsl(var(--status-resolved) / 0.1);
+    color: hsl(var(--status-resolved));
+    border: 1px solid hsl(var(--status-resolved) / 0.3);
+  }
+
+  .status-rejected {
+    background: hsl(var(--status-rejected) / 0.1);
+    color: hsl(var(--status-rejected));
+    border: 1px solid hsl(var(--status-rejected) / 0.3);
+  }
+
+  /* Notification Dot */
+  .notification-dot {
+    background: hsl(var(--notification-dot));
+    box-shadow: 0 0 0 2px hsl(var(--background));
+  }
+
+  /* Map Styles */
+  .map-container {
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-medium);
+  }
+}
