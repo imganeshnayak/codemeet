@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Send, Mic, MapPin, Bell, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,58 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Chatbot() {
+  const [messages, setMessages] = useState<Array<{ id: string; text: string; sender: 'user' | 'bot' }>>([
+    { id: '1', text: "Hello 👋, I’m your Jan Awaaz Assistant. How can I help today?", sender: 'bot' }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
+    const userId = Date.now().toString();
+    const userMessage = { id: `u-${userId}`, text: text.trim(), sender: 'user' as const };
+    setMessages((m) => [...m, userMessage]);
+    setInputValue('');
+    setIsSending(true);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text.trim(), sessionId })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || 'AI service error');
+      }
+
+      const data = await res.json();
+      const botText = data.response || 'Sorry, I could not generate a reply.';
+      if (data.sessionId) setSessionId(data.sessionId);
+      const botMessage = { id: `b-${Date.now()}`, text: botText, sender: 'bot' as const };
+      setMessages((m) => [...m, botMessage]);
+    } catch (e) {
+      console.error('Send message error', e);
+      const errMsg = { id: `err-${Date.now()}`, text: 'Error: failed to send message', sender: 'bot' as const };
+      setMessages((m) => [...m, errMsg]);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (isSending) return;
+    sendMessage(inputValue);
+  };
+
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground max-w-4xl mx-auto shadow-lg rounded-2xl overflow-hidden border border-border">
       {/* Header */}
@@ -36,39 +88,70 @@ export default function Chatbot() {
 
       {/* Chat Section */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
-        <div className="flex justify-start">
-          <Card className="max-w-xs md:max-w-sm bg-muted/40">
-            <CardContent className="p-3">
-              Hello 👋, I’m your Jan Awaaz Assistant. How can I help today?
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="flex justify-end">
-          <Card className="max-w-xs md:max-w-sm bg-primary text-primary-foreground">
-            <CardContent className="p-3">Report a pothole near my street.</CardContent>
-          </Card>
-        </div>
-
-        <div className="flex justify-start">
-          <Card className="max-w-xs md:max-w-sm bg-muted/40">
-            <CardContent className="p-3">
-              Got it! Please share your location or photo of the issue 📍
-            </CardContent>
-          </Card>
-        </div>
+        {messages.map((m) => (
+          <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <Card className={`max-w-xs md:max-w-sm ${m.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/40'}`}>
+              <CardContent className="p-3">{m.text}</CardContent>
+            </Card>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-border bg-card flex items-center gap-2">
-        <Input placeholder="Type your message..." className="flex-1" />
-        <Button variant="outline" size="icon">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-card flex items-center gap-2">
+        <Input
+          placeholder="Type your message..."
+          className="flex-1"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+        />
+        <Button variant="outline" size="icon" type="button" onClick={() => !isSending && sendMessage(inputValue)}>
           <Mic className="w-4 h-4" />
         </Button>
-        <Button size="icon" className="bg-primary text-primary-foreground">
+        <Button disabled={isSending} type="submit" size="icon" className="bg-primary text-primary-foreground">
           <Send className="w-4 h-4" />
         </Button>
-      </div>
+
+        {/* Small robot iframe next to the send button (kept visually) */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-12 h-12 md:w-14 md:h-14 overflow-hidden bg-transparent"
+        >
+          <div className="relative w-full h-full">
+            <iframe
+              src="https://my.spline.design/greetingrobot-S0D5T8vmFbhMNtZ3WcbXZpdw/?embed=1&ui=0&background=transparent&branding=0"
+              width="100%"
+              height="100%"
+              title="AI Robot Assistant"
+              allowFullScreen
+              style={{ border: 0, background: 'transparent' }}
+            />
+
+            {/* Visual mask to hide Spline watermark/branding area (visual hack) */}
+            <div
+              aria-hidden="true"
+              className="absolute"
+              style={{
+                right: 0,
+                bottom: 0,
+                width: '60%',
+                height: '20%',
+                background: 'linear-gradient(transparent, rgba(255,255,255,0.98))',
+                pointerEvents: 'none'
+              }}
+            />
+          </div>
+        </motion.div>
+      </form>
 
       {/* Floating 3D Robot Assistant */}
       <motion.div

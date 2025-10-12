@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
+import { OpenAI } from 'openai';
 import ChatHistory from '../models/ChatHistory';
-
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -48,7 +47,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: 'You are a helpful civic engagement assistant. Help users report city issues, find information about their community, and answer questions about civic services. Be concise and friendly.'
+        content: 'You are CivicBot, a helpful civic engagement assistant. Introduce yourself as CivicBot. Help users report city issues, find information about their community, and answer questions about civic services. Answer in a clear, conversational, and well-structured way, just like ChatGPT. Use Markdown formatting for headings, lists, and highlights.'
       }
     ];
 
@@ -67,76 +66,62 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       content: message
     });
 
-    // Call OpenRouter API
-    console.log('🤖 Calling OpenRouter API...');
-    console.log('📝 Sending messages:', JSON.stringify(messages, null, 2));
-
-    // Read API key at request time so changes to process.env are respected
-    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-    // Debug API key presence (masked)
-    if (!OPENROUTER_API_KEY) {
-      console.error('❌ OPENROUTER_API_KEY is missing from environment');
-      return res.status(500).json({ error: 'OpenRouter API key not configured on server' });
+    // Use Hugging Face router endpoint with OpenAI SDK
+    const HF_TOKEN = process.env.HF_TOKEN;
+    const HF_MODEL = process.env.HF_MODEL;
+    if (!HF_TOKEN) {
+      console.error('❌ HF_TOKEN is missing from environment');
+      return res.status(500).json({ error: 'Hugging Face token not configured on server' });
     }
+    if (!HF_MODEL) {
+      console.error('❌ HF_MODEL is missing from environment');
+      return res.status(500).json({ error: 'Hugging Face model not configured (set HF_MODEL)' });
+    }
+
+    console.log('🔧 Using Hugging Face router model:', HF_MODEL);
+
+    const client = new OpenAI({
+      baseURL: 'https://router.huggingface.co/v1',
+      apiKey: HF_TOKEN,
+    });
+
     try {
-      const masked = OPENROUTER_API_KEY.length > 10 ? `${OPENROUTER_API_KEY.slice(0,8)}...${OPENROUTER_API_KEY.slice(-4)}` : OPENROUTER_API_KEY;
-      console.log('🔐 OPENROUTER_API_KEY present (masked):', masked);
-    } catch (e) {
-      console.log('🔐 OPENROUTER_API_KEY present');
-    }
-    
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
-        'X-Title': 'CodeMeet - Civic Engagement Platform',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-3.5-turbo',
-        messages: messages
-      })
-    });
-
-    console.log('📡 OpenRouter response status:', response.status);
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('❌ OpenRouter API error:', errorData);
-      return res.status(response.status).json({ 
-        error: 'AI service error',
-        details: errorData 
+      const chatCompletion = await client.chat.completions.create({
+        model: HF_MODEL,
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
       });
-    }
+      const aiResponse = chatCompletion.choices?.[0]?.message?.content;
+      if (!aiResponse) {
+        console.error('❌ Unexpected Hugging Face router response', chatCompletion);
+        return res.status(502).json({ error: 'Hugging Face router returned unexpected response', details: chatCompletion });
+      }
+      console.log('✅ HF Router Response:', aiResponse);
 
-    const data = await response.json() as OpenRouterResponse;
-    const aiResponse = data.choices[0].message.content;
-    console.log('✅ AI Response:', aiResponse);
+      // Save to chat history
+      const newMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }> = [
+        { role: 'user' as const, content: message, timestamp: new Date() },
+        { role: 'assistant' as const, content: aiResponse, timestamp: new Date() }
+      ];
 
-    // Save to chat history
-    const newMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }> = [
-      { role: 'user' as const, content: message, timestamp: new Date() },
-      { role: 'assistant' as const, content: aiResponse, timestamp: new Date() }
-    ];
+      if (chatHistory) {
+        chatHistory.messages.push(...newMessages);
+        await chatHistory.save();
+      } else {
+        await ChatHistory.create({
+          userId: userId,
+          sessionId: sessionId || `anon-${Date.now()}`,
+          messages: newMessages
+        });
+      }
 
-    if (chatHistory) {
-      // Update existing history
-      chatHistory.messages.push(...newMessages);
-      await chatHistory.save();
-    } else {
-      // Create new history
-      await ChatHistory.create({
-        userId: userId,
-        sessionId: sessionId || `anon-${Date.now()}`,
-        messages: newMessages
+      res.json({
+        response: aiResponse,
+        sessionId: chatHistory?.sessionId || sessionId
       });
+    } catch (err: any) {
+      console.error('❌ Hugging Face router request error:', err?.message || err);
+      return res.status(502).json({ error: 'Hugging Face router request failed', details: err?.message || String(err) });
     }
-
-    res.json({
-      response: aiResponse,
-      sessionId: chatHistory?.sessionId || sessionId
-    });
 
   } catch (error) {
     console.error('Chat error:', error);
@@ -145,6 +130,32 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
+};
+
+// Health check for Hugging Face router
+export const healthCheck = async (_req: Request, res: Response) => {
+  const provider = 'huggingface-router';
+  const status: any = { provider, checks: {} };
+
+  if (process.env.HF_TOKEN && process.env.HF_MODEL) {
+    try {
+      const client = new OpenAI({
+        baseURL: 'https://router.huggingface.co/v1',
+        apiKey: process.env.HF_TOKEN,
+      });
+      const chatCompletion = await client.chat.completions.create({
+        model: process.env.HF_MODEL,
+        messages: [{ role: 'user', content: 'health check' }],
+      });
+      status.checks.huggingface = { ok: true, status: 200 };
+    } catch (e: any) {
+      status.checks.huggingface = { ok: false, error: e?.message || String(e) };
+    }
+  } else {
+    status.checks.huggingface = { ok: false, error: 'HF_TOKEN or HF_MODEL not set' };
+  }
+
+  res.json(status);
 };
 
 // Get chat history
