@@ -1,60 +1,147 @@
 import { Github, Twitter, Linkedin } from "lucide-react";
+import { motion } from 'framer-motion';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const outer = {
+    hidden: { opacity: 0, y: 24 },
+    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.06, duration: 0.6 } }
+  } as const;
+
+  const inner = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.45 } }
+  } as const;
+
   return (
-    <footer className="py-12 bg-card border-t border-border">
-      <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Smart Issues</h3>
-            <p className="text-sm text-muted-foreground">
-              Transform feedback into action with intelligent issue tracking.
-            </p>
-          </div>
+    <motion.footer
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: false, amount: 0.18 }} // animate every time
+      variants={outer}
+      className="relative overflow-hidden"
+    >
+      {/* Top hero-style section */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 py-10 md:py-14">
+        <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-6">
+          <motion.div variants={inner} className="md:col-span-8">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-slate-900 dark:text-white"
+              style={{ fontFamily: 'Georgia, ui-serif, serif' }}
+            >
+              Report{' '}
+              <span className="font-semibold text-purple-600">Issues</span>
+              <br />
+              Track{' '}
+              <span className="font-semibold text-purple-600">Progress</span> 
+              Make a{' '}
+              <span className="font-semibold text-purple-600">Difference</span>
+            </h2>
+          </motion.div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Product</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary smooth-transition">Features</a></li>
-              <li><a href="#" className="hover:text-primary smooth-transition">Pricing</a></li>
-              <li><a href="#" className="hover:text-primary smooth-transition">Security</a></li>
-              <li><a href="#" className="hover:text-primary smooth-transition">Integrations</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Company</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary smooth-transition">About</a></li>
-              <li><a href="#" className="hover:text-primary smooth-transition">Blog</a></li>
-              <li><a href="#" className="hover:text-primary smooth-transition">Careers</a></li>
-              <li><a href="#" className="hover:text-primary smooth-transition">Contact</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Connect</h4>
-            <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-primary smooth-transition">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary smooth-transition">
-                <Github className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary smooth-transition">
-                <Linkedin className="h-5 w-5" />
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>&copy; {currentYear} Smart Issues. All rights reserved.</p>
+          <motion.div
+            variants={inner}
+            className="md:col-span-4 flex md:justify-end mt-6 md:mt-0"
+          >
+            <a
+              href="#"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-semibold shadow-lg hover:shadow-2xl transform transition hover:-translate-y-1 hover:scale-105"
+            >
+              Get Started
+            </a>
+          </motion.div>
         </div>
       </div>
-    </footer>
+
+      {/* Main footer content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 pb-12">
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-xl shadow-inner border border-slate-100/6 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 md:p-10">
+            {/* About Section */}
+            <motion.div variants={inner}>
+              <div className="flex items-center gap-4 mb-4">
+                {/* Floating logo */}
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-indigo-500 to-sky-400 flex items-center justify-center shadow-md animate-float-slow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 12c1.333-2 4-3 8-3s6.667 1 8 3"
+                      stroke="#fff"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M4 16c1.333-2 4-3 8-3s6.667 1 8 3"
+                      stroke="#fff"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity="0.7"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white">About Smart Issues</h3>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                Smart Issues helps communities report problems, track resolutions, and drive real-world impact through transparent progress tracking.
+              </p>
+            </motion.div>
+
+            {/* Contact Section */}
+            <motion.div variants={inner}>
+              <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">Contact Us</h4>
+              <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                <li><a href="#" className="hover:text-indigo-400 transition-colors">Email Support</a></li>
+                <li><a href="#" className="hover:text-indigo-400 transition-colors">Community Forum</a></li>
+                <li><a href="#" className="hover:text-indigo-400 transition-colors">Feedback Form</a></li>
+              </ul>
+            </motion.div>
+
+            {/* Connect Section */}
+            <motion.div variants={inner}>
+              <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">Connect With Us</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-4">
+                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 hover:text-indigo-400 transition transform hover:scale-105">
+                  <Twitter className="h-6 w-6 bg-white/60 rounded p-1" />
+                  <span className="text-sm">Instagram</span>
+                </a>
+                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 hover:text-indigo-400 transition transform hover:scale-105">
+                  <svg className="h-6 w-6 bg-black text-white rounded p-1" viewBox="0 0 24 24" fill="none">
+                    <rect width="100%" height="100%" rx="3" fill="#111" />
+                    <path d="M7 7h10M7 12h10M7 17h10" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-sm">X</span>
+                </a>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="border-t border-slate-100/6 px-8 py-6">
+            <motion.div variants={inner} className="text-center text-sm text-slate-600 dark:text-slate-300">
+              <p>© {currentYear} Smart Issues. All rights reserved.</p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes float-slow { 
+          0% { transform: translateY(0px);} 
+          50% { transform: translateY(-6px);} 
+          100% { transform: translateY(0px);} 
+        }
+        @keyframes float { 
+          0% { transform: translateY(0px);} 
+          50% { transform: translateY(-6px);} 
+          100% { transform: translateY(0px);} 
+        }
+        .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+      `}</style>
+    </motion.footer>
   );
 };
 
