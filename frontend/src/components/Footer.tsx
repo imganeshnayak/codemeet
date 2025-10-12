@@ -62,28 +62,11 @@ const Footer = () => {
             {/* About Section */}
             <motion.div variants={inner}>
               <div className="flex items-center gap-4 mb-4">
-                {/* Floating logo */}
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-indigo-500 to-sky-400 flex items-center justify-center shadow-md animate-float-slow">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M4 12c1.333-2 4-3 8-3s6.667 1 8 3"
-                      stroke="#fff"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M4 16c1.333-2 4-3 8-3s6.667 1 8 3"
-                      stroke="#fff"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      opacity="0.7"
-                    />
-                  </svg>
-                </div>
                 <div>
-                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white">About Smart Issues</h3>
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                    <img src="/awaaz logo .png" alt="Awaaz logo" className="w-20 h-20 object-cover rounded" />
+                    About Smart Issues
+                  </h3>
                 </div>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-300">
