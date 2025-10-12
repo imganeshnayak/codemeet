@@ -22,7 +22,6 @@ const chatHistorySchema = new Schema<IChatHistory>(
     sessionId: {
       type: String,
       required: true,
-      index: true,
     },
     messages: [
       {
