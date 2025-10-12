@@ -14,6 +14,7 @@ import homeRoutes from './routes/home.routes';
 import seedRoutes from './routes/seed.routes';
 import communityRoutes from './routes/community.routes';
 import profileRoutes from './routes/profile.routes';
+import adminPanelRoutes from './routes/adminPanel.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Initialize express app
@@ -45,6 +46,7 @@ app.use('/api/home', homeRoutes);
 app.use('/api/seed', seedRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminPanelRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
