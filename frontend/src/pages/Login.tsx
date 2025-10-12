@@ -34,7 +34,7 @@ const Login = () => {
         toast({
           variant: 'destructive',
           title: 'Login failed',
-          description: 'Invalid email or password. Try demo@city.gov / demo123',
+          description: 'Invalid email or password. Please check your credentials and try again.',
         });
       }
     } catch (error) {
@@ -80,7 +80,7 @@ const Login = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="demo@city.gov"
+                  placeholder="name@yourcity.gov"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -97,11 +97,7 @@ const Login = () => {
                   required
                 />
               </div>
-              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                <p className="font-medium mb-1">Demo Credentials:</p>
-                <p>Email: demo@city.gov</p>
-                <p>Password: demo123</p>
-              </div>
+              {/* Demo credentials removed for production */}
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full" disabled={isLoading}>

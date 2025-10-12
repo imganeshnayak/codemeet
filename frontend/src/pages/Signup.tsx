@@ -70,107 +70,117 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+    <div className="min-h-screen w-full bg-gray-50 font-sans">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.45 }}
+        className="flex flex-col md:flex-row min-h-screen"
       >
-        <Link to="/" className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-3xl">🏙️</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-2xl">Jan Awaaz</h1>
-            <p className="text-sm text-muted-foreground">City Services Platform</p>
-          </div>
-        </Link>
+        {/* Left: form */}
+        <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-6">
+          <div className="w-full max-w-md">
+            <Link to="/" className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-lg bg-transparent flex items-center justify-center overflow-hidden">
+                <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-10 h-10 object-contain" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold">Jan Awaaz</h1>
+                <p className="text-sm text-gray-500">City Services Platform</p>
+              </div>
+            </Link>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Account</CardTitle>
-            <CardDescription>
-              Join Jan Awaaz to report issues and engage with your community
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Create Account
-                  </>
-                )}
-              </Button>
-              <p className="text-sm text-center text-muted-foreground">
-                Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Sign in
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
-        </Card>
+            <div className="bg-white p-8 rounded-xl shadow-md">
+              <h2 className="text-2xl font-bold mb-1">Create Account</h2>
+              <p className="text-sm text-gray-500 mb-6">Join Jan Awaaz to report issues and engage with your community</p>
 
-        <div className="text-center mt-6">
-          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground smooth-transition">
-            ← Back to home
-          </Link>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <Label htmlFor="name" className="text-sm text-gray-700">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-green-500 focus:ring-1 focus:ring-green-100"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="text-sm text-gray-700">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-green-500 focus:ring-1 focus:ring-green-100"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password" className="text-sm text-gray-700">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-green-500 focus:ring-1 focus:ring-green-100"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-sm text-gray-700">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:border-green-500 focus:ring-1 focus:ring-green-100"
+                  />
+                </div>
+
+                <div>
+                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg py-3 font-medium transition-shadow shadow-sm" disabled={isLoading}>
+                    {isLoading ? 'Creating account...' : 'Create Account'}
+                  </Button>
+                </div>
+
+                <p className="text-sm text-center text-gray-500">Already have an account? <Link to="/login" className="text-green-600 font-medium">Sign in</Link></p>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: decorative panel */}
+        <div className="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gradient-to-br from-green-700 to-green-400 p-8">
+          <div className="max-w-lg text-white text-center px-6">
+            <h3 className="text-3xl font-extrabold mb-4">Join your community</h3>
+            <p className="mb-6 opacity-90">Create an account to report and track city issues, and collaborate with neighbors.</p>
+            <div className="w-full h-64 relative">
+              <svg viewBox="0 0 600 400" className="w-full h-full opacity-90">
+                <defs>
+                  <linearGradient id="g2" x1="0" x2="1">
+                    <stop offset="0" stopColor="#10b981" />
+                    <stop offset="1" stopColor="#047857" />
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="600" height="400" rx="24" fill="url(#g2)" opacity="0.0" />
+                <circle cx="120" cy="80" r="60" fill="#059669" opacity="0.18" />
+                <rect x="320" y="120" rx="32" ry="32" width="220" height="120" fill="#047857" opacity="0.18" />
+                <ellipse cx="260" cy="260" rx="100" ry="60" fill="#059669" opacity="0.12" />
+              </svg>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>
