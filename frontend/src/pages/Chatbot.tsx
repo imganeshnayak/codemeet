@@ -4,14 +4,18 @@ import { Sparkles, Send, Mic, MapPin, Bell, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import AppLayout from "@/components/AppLayout";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function Chatbot() {
   const [messages, setMessages] = useState<Array<{ id: string; text: string; sender: 'user' | 'bot' }>>([
-    { id: '1', text: "Hello 👋, I’m your Jan Awaaz Assistant. How can I help today?", sender: 'bot' }
+    { id: '1', text: "Hello 👋, I'm your Jan Awaaz Assistant. How can I help today?", sender: 'bot' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  // Initialize sessionId immediately instead of null
+  const [sessionId] = useState<string>(() => `chatbot-${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -40,7 +44,6 @@ export default function Chatbot() {
 
       const data = await res.json();
       const botText = data.response || 'Sorry, I could not generate a reply.';
-      if (data.sessionId) setSessionId(data.sessionId);
       const botMessage = { id: `b-${Date.now()}`, text: botText, sender: 'bot' as const };
       setMessages((m) => [...m, botMessage]);
     } catch (e) {
@@ -59,9 +62,10 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="relative flex flex-col h-screen bg-background text-foreground max-w-4xl mx-auto shadow-lg rounded-2xl overflow-hidden border border-border">
-      {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border bg-card flex items-center gap-3">
+    <AppLayout>
+      <div className="relative flex flex-col h-[calc(100vh-4rem)] bg-background text-foreground max-w-4xl mx-auto shadow-lg rounded-2xl overflow-hidden border border-border">
+        {/* Header */}
+        <div className="p-4 md:p-6 border-b border-border bg-card flex items-center gap-3">
         <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
           <Sparkles className="w-6 h-6 text-primary" />
         </div>
@@ -90,8 +94,30 @@ export default function Chatbot() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <Card className={`max-w-xs md:max-w-sm ${m.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/40'}`}>
-              <CardContent className="p-3">{m.text}</CardContent>
+            <Card className={`max-w-xs md:max-w-lg ${m.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/40'}`}>
+              <CardContent className="p-3 prose prose-sm max-w-none dark:prose-invert">
+                {m.sender === 'bot' ? (
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-4 mb-2 text-foreground" {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-base font-semibold mt-3 mb-2 text-foreground" {...props} />,
+                      p: ({node, ...props}) => <p className="mb-2 text-foreground" {...props} />,
+                      ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1 text-foreground" {...props} />,
+                      ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-foreground" {...props} />,
+                      li: ({node, ...props}) => <li className="text-foreground" {...props} />,
+                      strong: ({node, ...props}) => <strong className="font-bold text-foreground" {...props} />,
+                      code: ({node, ...props}) => <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono" {...props} />,
+                      hr: ({node, ...props}) => <hr className="my-4 border-border" {...props} />,
+                      a: ({node, ...props}) => <a className="text-blue-500 hover:underline" {...props} />,
+                    }}
+                  >
+                    {m.text}
+                  </ReactMarkdown>
+                ) : (
+                  <span className="text-primary-foreground">{m.text}</span>
+                )}
+              </CardContent>
             </Card>
           </div>
         ))}
@@ -170,5 +196,6 @@ export default function Chatbot() {
         />
       </motion.div>
     </div>
+    </AppLayout>
   );
 }

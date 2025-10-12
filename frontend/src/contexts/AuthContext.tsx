@@ -18,23 +18,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users database (hardcoded)
-const MOCK_USERS = [
-  {
-    id: '1',
-    email: 'demo@city.gov',
-    password: 'demo123',
-    name: 'Demo User',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Demo'
-  },
-  {
-    id: '2',
-    email: 'john@city.gov',
-    password: 'john123',
-    name: 'John Doe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
-  }
-];
+// NOTE: Hardcoded mock users removed. Use real auth backend or development fixtures.
 
 // LocalStorage keys
 const STORAGE_KEY_USER = 'jan_awaaz_user';
