@@ -7,18 +7,82 @@ export const createIssue = async (req: Request, res: Response): Promise<void> =>
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.error('Validation errors:', errors.array());
       res.status(400).json({ success: false, errors: errors.array() });
       return;
     }
 
-  const { title, description, category, priority, location, images, reportedBy } = req.body;
-  const reporter = reportedBy || (req as any).user?.userId || undefined; // optional
+    const { 
+      title, 
+      description, 
+      category, 
+      priority, 
+      location, 
+      images, 
+      reportedBy, 
+      aiSummary,
+      submissionStatus 
+    } = req.body;
+    
+    console.log('Creating issue with data:', {
+      title,
+      description,
+      category,
+      priority,
+      location,
+      images: images?.length || 0,
+      aiSummary: aiSummary ? 'provided' : 'none',
+      submissionStatus
+    });
 
-  const issue = await Issue.create({ title, description, category, priority, location, images: images || [], reportedBy: reporter });
+    const reporter = reportedBy || (req as any).user?.userId || undefined; // optional
+
+    // If submissionStatus is 'submitted', set submittedAt timestamp
+    const issueData: any = {
+      title,
+      description,
+      category,
+      priority,
+      location,
+      images: images || [],
+      reportedBy: reporter,
+      submissionStatus: submissionStatus || 'draft'
+    };
+
+    if (aiSummary) {
+      issueData.aiSummary = aiSummary;
+    }
+
+    if (submissionStatus === 'submitted') {
+      issueData.submittedAt = new Date();
+    }
+
+    const issue = await Issue.create(issueData);
+    console.log('Issue created successfully:', issue._id);
 
     res.status(201).json({ success: true, data: { issue } });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to create issue.' });
+    console.error('Issue creation error:', error);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map((err: any) => ({
+        field: err.path,
+        message: err.message
+      }));
+      res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+      return;
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Failed to create issue.',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 

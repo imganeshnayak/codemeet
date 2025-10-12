@@ -15,6 +15,7 @@ export interface IIssue extends Document {
     address?: string;
   };
   images: string[];
+  aiSummary?: string;
   reportedBy: Types.ObjectId;
   assignedTo?: Types.ObjectId;
   votes: number;
@@ -24,6 +25,8 @@ export interface IIssue extends Document {
     text: string;
     createdAt: Date;
   }[];
+  submittedAt?: Date;
+  submissionStatus: 'draft' | 'submitted' | 'under-review';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,14 +37,14 @@ const issueSchema = new Schema<IIssue>(
       type: String,
       required: [true, 'Issue title is required'],
       trim: true,
-      minlength: [5, 'Title must be at least 5 characters'],
+      minlength: [3, 'Title must be at least 3 characters'],
       maxlength: [100, 'Title cannot exceed 100 characters'],
     },
     description: {
       type: String,
       required: [true, 'Issue description is required'],
       trim: true,
-      minlength: [10, 'Description must be at least 10 characters'],
+      minlength: [5, 'Description must be at least 5 characters'],
       maxlength: [1000, 'Description cannot exceed 1000 characters'],
     },
     category: {
@@ -92,6 +95,10 @@ const issueSchema = new Schema<IIssue>(
       type: [String],
       default: [],
     },
+    aiSummary: {
+      type: String,
+      trim: true,
+    },
     reportedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -129,6 +136,14 @@ const issueSchema = new Schema<IIssue>(
         },
       },
     ],
+    submittedAt: {
+      type: Date,
+    },
+    submissionStatus: {
+      type: String,
+      enum: ['draft', 'submitted', 'under-review'],
+      default: 'draft',
+    },
   },
   {
     timestamps: true,

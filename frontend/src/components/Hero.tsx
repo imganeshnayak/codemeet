@@ -1,8 +1,17 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Hero = () => {
+type HeroProps = {
+  hero: {
+    title: string;
+    subtitle: string;
+    cta: string;
+  };
+};
+
+const Hero = ({ hero }: HeroProps) => {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Video Background */}
@@ -25,13 +34,10 @@ const Hero = () => {
         <div className="container pb-20 md:pb-32">
           <div className="max-w-3xl animate-fade-in-slow">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 text-white text-shadow leading-tight">
-              Transform Issues
-              <br />
-              Into Action
+              {hero.title}
             </h1>
             <p className="text-lg md:text-xl lg:text-2xl mb-8 text-white/90 text-shadow font-light max-w-2xl">
-              A cinematic platform for intelligent issue tracking and resolution.
-              Beautiful, intuitive, and powerful.
+              {hero.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/signup">
@@ -40,7 +46,7 @@ const Hero = () => {
                   size="lg"
                   className="text-base md:text-lg px-8 py-6 h-auto"
                 >
-                  Get Started
+                  {hero.cta}
                   <ArrowRight className="ml-2" />
                 </Button>
               </Link>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Camera, Plus, Filter, MessageCircle, ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,145 +21,6 @@ import Autoplay from 'embla-carousel-autoplay';
 import 'leaflet/dist/leaflet.css';
 const MapClient = React.lazy(() => import('@/components/MapClient'));
 
-// Mock issues data
-const mockIssues = [
-  {
-    id: '1',
-    title: 'Pothole on Main Street',
-    description: 'Large pothole causing traffic issues',
-    category: 'Roads',
-    status: 'in-progress',
-    priority: 'high',
-    location: { lat: 40.7128, lng: -74.0060 },
-    address: '123 Main St',
-    date: '2025-10-10',
-    image: '/placeholder.svg'
-  },
-  {
-    id: '2',
-    title: 'Streetlight Not Working',
-    description: 'Streetlight has been out for 3 days',
-    category: 'Lighting',
-    status: 'pending',
-    priority: 'medium',
-    location: { lat: 40.7148, lng: -74.0070 },
-    address: '456 Oak Ave',
-    date: '2025-10-11',
-    image: '/placeholder.svg'
-  },
-  {
-    id: '3',
-    title: 'Graffiti Removal Needed',
-    description: 'Vandalism on public building',
-    category: 'Vandalism',
-    status: 'resolved',
-    priority: 'low',
-    location: { lat: 40.7108, lng: -74.0050 },
-    address: '789 Park Blvd',
-    date: '2025-10-09',
-    image: '/placeholder.svg'
-  },
-];
-
-// Mock community issues for carousel visualization
-const mockCommunityIssues = [
-  {
-    _id: '1',
-    title: 'Broken Water Pipe on Elm Street',
-    description: 'Water pipe burst causing flooding in the area. Needs immediate attention.',
-    category: 'water',
-    status: 'pending',
-    priority: 'high',
-    location: { address: '245 Elm Street' },
-    createdAt: '2025-10-12',
-    votes: 24,
-    votedBy: []
-  },
-  {
-    _id: '2',
-    title: 'Traffic Signal Malfunction',
-    description: 'Traffic light stuck on red at Main and 5th intersection causing congestion.',
-    category: 'traffic',
-    status: 'in-progress',
-    priority: 'high',
-    location: { address: 'Main St & 5th Ave' },
-    createdAt: '2025-10-11',
-    votes: 18,
-    votedBy: []
-  },
-  {
-    _id: '3',
-    title: 'Overflowing Garbage Bins',
-    description: 'Public garbage bins near the park are overflowing and attracting pests.',
-    category: 'garbage',
-    status: 'pending',
-    priority: 'medium',
-    location: { address: 'Central Park entrance' },
-    createdAt: '2025-10-11',
-    votes: 32,
-    votedBy: []
-  },
-  {
-    _id: '4',
-    title: 'Pothole on Highway 101',
-    description: 'Large pothole on Highway 101 northbound lane causing vehicle damage.',
-    category: 'pothole',
-    status: 'pending',
-    priority: 'high',
-    location: { address: 'Highway 101, Mile 15' },
-    createdAt: '2025-10-10',
-    votes: 45,
-    votedBy: []
-  },
-  {
-    _id: '5',
-    title: 'Broken Streetlight on Oak Avenue',
-    description: 'Multiple streetlights are not working, making the area unsafe at night.',
-    category: 'streetlight',
-    status: 'in-progress',
-    priority: 'medium',
-    location: { address: '800 Oak Avenue' },
-    createdAt: '2025-10-10',
-    votes: 15,
-    votedBy: []
-  },
-  {
-    _id: '6',
-    title: 'Drainage Problem on River Road',
-    description: 'Poor drainage causing water accumulation during rain, making road impassable.',
-    category: 'drainage',
-    status: 'pending',
-    priority: 'high',
-    location: { address: 'River Road near Bridge' },
-    createdAt: '2025-10-09',
-    votes: 28,
-    votedBy: []
-  },
-  {
-    _id: '7',
-    title: 'Graffiti on Community Center',
-    description: 'Vandalism on the exterior walls of the community center needs removal.',
-    category: 'graffiti',
-    status: 'resolved',
-    priority: 'low',
-    location: { address: '123 Community Drive' },
-    createdAt: '2025-10-08',
-    votes: 8,
-    votedBy: []
-  },
-  {
-    _id: '8',
-    title: 'Damaged Sidewalk on Pine Street',
-    description: 'Cracked and uneven sidewalk poses tripping hazard for pedestrians.',
-    category: 'other',
-    status: 'pending',
-    priority: 'medium',
-    location: { address: '567 Pine Street' },
-    createdAt: '2025-10-08',
-    votes: 12,
-    votedBy: []
-  }
-];
 
 const categories = [
   { label: 'Roads', value: 'pothole' },
@@ -195,38 +57,78 @@ const Home = () => {
   });
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Automatically capture geolocation when opening the report modal
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (reportDialogOpen && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setFormData((prev) => ({ ...prev, location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }));
+        },
+        () => {},
+        { enableHighAccuracy: true }
+      );
+    }
+  }, [reportDialogOpen]);
+
+  // Generate AI report and navigate to summary page
+  const handleGenerateReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    // submit to backend
-    fetch('/api/issues', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        priority: formData.priority,
-        location: { type: 'Point', coordinates: [formData.location.lng, formData.location.lat], address: formData.address },
-        images: [],
-      }),
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error((await res.json()).message || 'Failed to report issue');
-        toast({ title: 'Issue Reported!', description: 'Your issue has been submitted successfully.' });
-        setIsDialogOpen(false);
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          priority: 'medium',
-          location: { lat: 40.7128, lng: -74.0060 },
-          address: '',
-        });
-      })
-      .catch((err) => {
-        toast({ title: 'Error', description: String(err), variant: 'destructive' });
+    
+    // Enhanced system prompt for professional government report format
+    const systemPrompt = `You are a professional civic issue report writer for government authorities.
+
+CRITICAL INSTRUCTIONS:
+- Write ONLY the official report content
+- Use formal, professional language suitable for government submission
+- Format as a structured report with clear sections
+- NO conversational language (no "Certainly!", "Here's", "Let me know")
+- NO suggestions about next steps, submission methods, or contact information
+- NO questions or offers to help further
+- NO emojis, excessive punctuation, or casual language
+- NO URLs, links, or references to websites/apps
+- NO markdown formatting (*, #, etc.)
+
+REQUIRED FORMAT:
+1. Issue Summary (2-3 sentences)
+2. Detailed Description
+3. Impact Assessment
+4. Recommended Action
+
+Keep it professional, factual, and ready for official submission.`;
+
+    const userPrompt = `Generate an official civic issue report with the following details:
+
+Title: ${formData.title}
+Description: ${formData.description}
+Category: ${formData.category}
+Priority: ${formData.priority}
+Location: ${formData.address}
+Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
+
+    let aiSummary = '';
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: systemPrompt + '\n\n' + userPrompt,
+          sessionId: 'report-gen-' + Date.now()
+        })
       });
+      if (res.ok) {
+        const data = await res.json();
+        aiSummary = data.response || '';
+      } else {
+        aiSummary = 'AI summary could not be generated.';
+      }
+    } catch (err) {
+      aiSummary = 'AI summary could not be generated.';
+    }
+    // For demo, photos are not handled yet
+    const report = { ...formData, aiSummary, photos: [] };
+    navigate('/report-summary', { state: { report } });
   };
 
   // client-only flag to avoid rendering react-leaflet during SSR/hydration
@@ -241,18 +143,16 @@ const Home = () => {
   const loadCommunityIssues = async () => {
     setLoadingIssues(true);
     try {
-      // Use hardcoded mock data for visualization
-      // Comment this out and uncomment the fetch below to use real API data
-      setCommunityIssues(mockCommunityIssues);
-      
-      // Uncomment to use real API:
-      // const res = await fetch('/api/issues?limit=20');
-      // if (res.ok) {
-      //   const data = await res.json();
-      //   setCommunityIssues(data.data?.issues || []);
-      // }
+      const res = await fetch('/api/issues?limit=20');
+      if (res.ok) {
+        const data = await res.json();
+        setCommunityIssues(data.data?.issues || []);
+      } else {
+        setCommunityIssues([]);
+      }
     } catch (err) {
       console.error('Failed to load community issues:', err);
+      setCommunityIssues([]);
     } finally {
       setLoadingIssues(false);
     }
@@ -287,7 +187,7 @@ const Home = () => {
     }
   };
 
-  const filteredIssues = mockIssues.filter(issue => 
+  const filteredIssues = communityIssues.filter(issue => 
     selectedTab === 'all' || issue.status === selectedTab
   );
 
@@ -454,9 +354,9 @@ const Home = () => {
             <p className="text-muted-foreground">Help improve our community by reporting issues</p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2" onClick={() => setReportDialogOpen(true)}>
                 <Plus className="w-5 h-5" />
                 Report Issue
               </Button>
@@ -468,7 +368,7 @@ const Home = () => {
                   Fill in the details below to report a city issue
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleGenerateReport} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Issue Title</Label>
                   <Input
@@ -570,7 +470,7 @@ const Home = () => {
                 </div>
 
                 <Button type="submit" className="w-full" size="lg">
-                  Submit Report
+                  Generate Report
                 </Button>
               </form>
             </DialogContent>

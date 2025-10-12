@@ -20,7 +20,12 @@ router.get('/:id', getIssue);
 // Protected (create/update/delete)
 router.post(
   '/',
-  [body('title').isString().isLength({ min: 3 }), body('description').isString().isLength({ min: 5 })],
+  [
+    body('title').isString().notEmpty(),
+    body('description').isString().notEmpty(),
+    body('category').optional().isString(),
+    body('priority').optional().isString(),
+  ],
   createIssue
 );
 

@@ -13,6 +13,7 @@ import Chatbot from "./pages/Chatbot";
 import Communities from "./pages/Communities";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import ReportSummary from "./pages/ReportSummary";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
               <Route path="/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/report-summary" element={<ProtectedRoute><ReportSummary /> </ProtectedRoute>} />
               
               {/* 404 Catch-all */}
               <Route path="*" element={<NotFound />} />

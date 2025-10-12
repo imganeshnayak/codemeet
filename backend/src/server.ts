@@ -10,6 +10,8 @@ import authRoutes from './routes/auth.routes';
 import issueRoutes from './routes/issue.routes';
 import chatRoutes from './routes/chat.routes';
 import debugRoutes from './routes/debug.routes';
+import homeRoutes from './routes/home.routes';
+import seedRoutes from './routes/seed.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Initialize express app
@@ -37,6 +39,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/home', homeRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
