@@ -57,8 +57,8 @@ const Login = () => {
         className="w-full max-w-md"
       >
         <Link to="/" className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl overflow-hidden">
-            <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-12 h-12 object-cover" />
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-transparent flex items-center justify-center">
+            <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-10 h-10 object-cover" />
           </div>
           <div>
             <h1 className="font-bold text-2xl">Jan Awaaz</h1>
