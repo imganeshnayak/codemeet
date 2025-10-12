@@ -1,4 +1,4 @@
-import { Github, Twitter, Linkedin } from "lucide-react";
+import { Github, Instagram, X } from "lucide-react";
 import { motion } from 'framer-motion';
 
 // --- Utility: The main Footer component ---
@@ -88,15 +88,12 @@ const Footer = () => {
             <motion.div variants={inner}>
               <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">Connect With Us</h4>
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-4">
-                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 hover:text-indigo-400 transition transform hover:scale-105">
-                  <Twitter className="h-6 w-6 bg-white/60 rounded p-1" />
+                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 transition transform hover:scale-105 hover:text-indigo-400">
+                  <Instagram className="h-6 w-6 bg-white/60 rounded p-1" />
                   <span className="text-sm">Instagram</span>
                 </a>
-                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 hover:text-indigo-400 transition transform hover:scale-105">
-                  <svg className="h-6 w-6 bg-black text-white rounded p-1" viewBox="0 0 24 24" fill="none">
-                    <rect width="100%" height="100%" rx="3" fill="#111" />
-                    <path d="M7 7h10M7 12h10M7 17h10" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                <a href="#" className="flex items-center gap-3 text-slate-700 dark:text-slate-200 transition transform hover:scale-105 hover:text-indigo-400">
+                  <X className="h-6 w-6 bg-black text-white rounded p-1" />
                   <span className="text-sm">X</span>
                 </a>
               </div>
