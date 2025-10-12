@@ -119,7 +119,38 @@ export default function Chatbot() {
           <Send className="w-4 h-4" />
         </Button>
 
-        {/* small robot removed */}
+        {/* Small robot iframe next to the send button (kept visually) */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-12 h-12 md:w-14 md:h-14 overflow-hidden bg-transparent"
+        >
+          <div className="relative w-full h-full">
+            <iframe
+              src="https://my.spline.design/greetingrobot-S0D5T8vmFbhMNtZ3WcbXZpdw/?embed=1&ui=0&background=transparent&branding=0"
+              width="100%"
+              height="100%"
+              title="AI Robot Assistant"
+              allowFullScreen
+              style={{ border: 0, background: 'transparent' }}
+            />
+
+            {/* Visual mask to hide Spline watermark/branding area (visual hack) */}
+            <div
+              aria-hidden="true"
+              className="absolute"
+              style={{
+                right: 0,
+                bottom: 0,
+                width: '60%',
+                height: '20%',
+                background: 'linear-gradient(transparent, rgba(255,255,255,0.98))',
+                pointerEvents: 'none'
+              }}
+            />
+          </div>
+        </motion.div>
       </form>
 
       {/* Floating 3D Robot Assistant */}

@@ -25,7 +25,7 @@ const DesktopSidebar = () => {
       {/* Logo / Branding */}
       <div className="p-6 border-b border-border">
         <Link to="/home" className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg overflow-hidden bg-transparent flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg overflow-hidden">
             <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-10 h-10 object-cover" />
           </div>
           <div>
