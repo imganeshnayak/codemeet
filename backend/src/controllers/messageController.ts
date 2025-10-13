@@ -21,11 +21,12 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Check if user has access
+    // ✅ For public communities, anyone can view messages without membership
+    // ✅ For private communities, only members can view
     if (!community.isPublic && userId && !community.members.some((m) => m.toString() === userId)) {
       res.status(403).json({
         success: false,
-        message: 'You do not have access to this community'
+        message: 'You do not have access to this private community'
       });
       return;
     }
@@ -98,14 +99,8 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Check if user is a member
-    if (!community.members.some((m) => m.toString() === userId)) {
-      res.status(403).json({
-        success: false,
-        message: 'You must be a member to send messages'
-      });
-      return;
-    }
+    // ✅ REMOVED MEMBERSHIP CHECK - Anyone can message in community hub
+    // This allows open participation without requiring membership
 
     // Create message
     const message = await Message.create({
@@ -311,14 +306,8 @@ export const markAsRead = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Check if user is a member
-    if (!community.members.some((m) => m.toString() === userId)) {
-      res.status(403).json({
-        success: false,
-        message: 'You must be a member of this community'
-      });
-      return;
-    }
+    // ✅ REMOVED MEMBERSHIP CHECK - Anyone can mark messages as read
+    // This allows open participation in public communities
 
     // Mark all unread messages as read
     const result = await Message.updateMany(
