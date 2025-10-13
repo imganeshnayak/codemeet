@@ -23,7 +23,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, Filter, ChevronLeft, ChevronRight, Eye, AlertCircle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://codemeet-yaus.onrender.com/api';
 
 interface Issue {
   _id: string;

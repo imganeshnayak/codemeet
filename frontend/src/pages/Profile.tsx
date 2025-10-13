@@ -17,7 +17,7 @@ import { UserBlockchainBadge } from '@/components/UserBlockchainBadge';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 // API Base URL
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://codemeet-yaus.onrender.com/api';
 
 // Activity interface
 interface Activity {

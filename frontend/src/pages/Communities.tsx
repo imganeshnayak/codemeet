@@ -57,7 +57,7 @@ interface Message {
   createdAt: string;
 }
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://codemeet-yaus.onrender.com/api';
 
 const Communities = () => {
   const { user, isAuthenticated } = useAuth();

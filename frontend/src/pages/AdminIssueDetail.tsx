@@ -28,7 +28,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { BlockchainVerification } from '@/components/BlockchainVerification';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://codemeet-yaus.onrender.com/api';
 
 interface Issue {
   _id: string;
