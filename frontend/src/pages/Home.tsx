@@ -113,7 +113,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
     let aiSummary = '';
     try {
-      const res = await fetch('/api/chat', {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,7 +148,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
   const loadCommunityIssues = async () => {
     setLoadingIssues(true);
     try {
-      const res = await fetch('/api/issues?limit=20');
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues?limit=20`);
       if (res.ok) {
         const data = await res.json();
         setCommunityIssues(data.data?.issues || []);
@@ -171,7 +171,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         return;
       }
 
-      const res = await fetch(`/api/issues/${issueId}/vote`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +185,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         loadCommunityIssues();
         // If detail dialog is open, refresh the selected issue
         if (selectedIssue && selectedIssue._id === issueId) {
-          const issueRes = await fetch(`/api/issues/${issueId}`);
+          const issueRes = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}`);
           if (issueRes.ok) {
             const issueData = await issueRes.json();
             setSelectedIssue(issueData.data.issue);
@@ -202,7 +202,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
   const handleViewDetails = async (issueId: string) => {
     try {
-      const res = await fetch(`/api/issues/${issueId}`);
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedIssue(data.data.issue);
@@ -229,7 +229,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         return;
       }
 
-      const res = await fetch(`/api/issues/${selectedIssue._id}`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${selectedIssue._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         toast({ title: 'Comment Added!', description: 'Your comment has been posted.' });
         setCommentText('');
         // Refresh issue details
-        const issueRes = await fetch(`/api/issues/${selectedIssue._id}`);
+  const issueRes = await fetch(`${import.meta.env.VITE_API_URL}/issues/${selectedIssue._id}`);
         if (issueRes.ok) {
           const issueData = await issueRes.json();
           setSelectedIssue(issueData.data.issue);
