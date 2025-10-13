@@ -15,6 +15,7 @@ import seedRoutes from './routes/seed.routes';
 import communityRoutes from './routes/community.routes';
 import profileRoutes from './routes/profile.routes';
 import adminPanelRoutes from './routes/adminPanel.routes';
+import blockchainRoutes from './routes/blockchain.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Initialize express app
@@ -47,6 +48,7 @@ app.use('/api/seed', seedRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminPanelRoutes);
+app.use('/api/blockchain', blockchainRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

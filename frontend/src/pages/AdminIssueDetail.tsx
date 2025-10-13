@@ -26,6 +26,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BlockchainVerification } from '@/components/BlockchainVerification';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -68,6 +69,9 @@ interface Issue {
   }>;
   rejectionReason?: string;
   createdAt: string;
+  blockchainTxHash?: string;
+  blockchainVerified?: boolean;
+  blockchainTimestamp?: string;
 }
 
 const AdminIssueDetail: React.FC = () => {
@@ -281,6 +285,15 @@ const AdminIssueDetail: React.FC = () => {
               <Badge variant="outline" className="capitalize">
                 {issue.category}
               </Badge>
+              
+              {/* Blockchain Verification Badge */}
+              <BlockchainVerification
+                issueId={issue._id}
+                blockchainTxHash={issue.blockchainTxHash}
+                blockchainVerified={issue.blockchainVerified}
+                blockchainTimestamp={issue.blockchainTimestamp}
+                onRecordSuccess={fetchIssueDetail}
+              />
             </div>
           </div>
         </div>
@@ -325,8 +338,8 @@ const AdminIssueDetail: React.FC = () => {
                     <User className="h-4 w-4 mr-2" />
                     Reported By
                   </p>
-                  <p className="font-medium">{issue.reportedBy.name}</p>
-                  <p className="text-sm text-gray-500">{issue.reportedBy.email}</p>
+                  <p className="font-medium">{issue.reportedBy && issue.reportedBy.name ? issue.reportedBy.name : 'Unknown'}</p>
+                  <p className="text-sm text-gray-500">{issue.reportedBy && issue.reportedBy.email ? issue.reportedBy.email : ''}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 flex items-center">
@@ -374,7 +387,7 @@ const AdminIssueDetail: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
-                        Changed by: {history.changedBy.name}
+                        Changed by: {history.changedBy && history.changedBy.name ? history.changedBy.name : 'Unknown'}
                       </p>
                       {history.reason && (
                         <p className="text-sm text-gray-500 mt-1">{history.reason}</p>

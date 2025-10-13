@@ -47,7 +47,8 @@ export const listCommunities = async (req: AuthRequest, res: Response): Promise<
         return {
           ...community.toObject(),
           unreadCount,
-          memberCount: community.members.length
+          memberCount: community.members.length,
+          isMember: userId ? community.members.some(memberId => memberId.toString() === userId) : false
         };
       })
     );

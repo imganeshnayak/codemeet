@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Issue from '../models/Issue';
 import { validationResult } from 'express-validator';
+import blockchainService from '../config/blockchain';
 
 // Create issue
 export const createIssue = async (req: Request, res: Response): Promise<void> => {
@@ -108,7 +109,13 @@ export const listIssues = async (req: Request, res: Response): Promise<void> => 
     const issues = await Issue.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
     const total = await Issue.countDocuments(filter);
 
-    res.status(200).json({ success: true, data: { issues, page, limit, total } });
+    // Add Etherscan links for blockchain-verified issues
+    const issuesWithBlockchainInfo = issues.map(issue => ({
+      ...issue,
+      etherscanLink: issue.blockchainTxHash ? blockchainService.getEtherscanLink(issue.blockchainTxHash) : null
+    }));
+
+    res.status(200).json({ success: true, data: { issues: issuesWithBlockchainInfo, page, limit, total } });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || 'Failed to list issues.' });
   }
@@ -122,7 +129,14 @@ export const getIssue = async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ success: false, message: 'Issue not found.' });
       return;
     }
-    res.status(200).json({ success: true, data: { issue } });
+    
+    // Add Etherscan link if blockchain verified
+    const issueWithBlockchainInfo = {
+      ...issue,
+      etherscanLink: issue.blockchainTxHash ? blockchainService.getEtherscanLink(issue.blockchainTxHash) : null
+    };
+    
+    res.status(200).json({ success: true, data: { issue: issueWithBlockchainInfo } });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || 'Failed to get issue.' });
   }

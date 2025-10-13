@@ -21,6 +21,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminIssuesList from "./pages/AdminIssuesList";
 import AdminIssueDetail from "./pages/AdminIssueDetail";
+import AdminBlockchain from "./pages/AdminBlockchain";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="issues" element={<AdminIssuesList />} />
                 <Route path="issues/:id" element={<AdminIssueDetail />} />
+                <Route path="blockchain" element={<AdminBlockchain />} />
               </Route>
             </Route>
             

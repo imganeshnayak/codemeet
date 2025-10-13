@@ -49,6 +49,12 @@ export interface IIssue extends Document {
   
   submittedAt?: Date;
   submissionStatus: 'draft' | 'submitted' | 'under-review';
+  
+  // Blockchain integration
+  blockchainTxHash?: string; // Transaction hash when issue is recorded on blockchain
+  blockchainVerified?: boolean; // Whether the blockchain record is verified
+  blockchainTimestamp?: Date; // When it was recorded on blockchain
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -229,6 +235,18 @@ const issueSchema = new Schema<IIssue>(
       type: String,
       enum: ['draft', 'submitted', 'under-review'],
       default: 'draft',
+    },
+    
+    // Blockchain integration
+    blockchainTxHash: {
+      type: String,
+    },
+    blockchainVerified: {
+      type: Boolean,
+      default: false,
+    },
+    blockchainTimestamp: {
+      type: Date,
     },
   },
   {
