@@ -37,8 +37,8 @@ export function BlockchainVerification({
   const recordOnBlockchain = async () => {
     try {
       setIsRecording(true);
-      // Use the correct token key as per AuthContext
-      const token = localStorage.getItem('jan_awaaz_token');
+      // Use admin token for blockchain recording
+      const token = localStorage.getItem('adminToken');
 
       const response = await fetch(`${API_URL}/blockchain/record-issue/${issueId}`, {
         method: 'POST',
@@ -114,7 +114,7 @@ export function BlockchainVerification({
     return (
       <Dialog>
         <DialogTrigger asChild>
-          <Badge 
+          <Badge
             className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
             onClick={verifyTransaction}
           >

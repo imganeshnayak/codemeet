@@ -16,7 +16,7 @@ dotenv.config();
 
 async function checkIssueReporters() {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/civichub';
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/civichub';
     console.log('Connecting to database...');
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to database\n');

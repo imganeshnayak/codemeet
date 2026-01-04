@@ -78,11 +78,11 @@ const AdminIssueDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [issue, setIssue] = useState<Issue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Action states
   const [newStatus, setNewStatus] = useState('');
   const [newPriority, setNewPriority] = useState('');
@@ -98,7 +98,10 @@ const AdminIssueDetail: React.FC = () => {
   const fetchIssueDetail = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/admin/issues/${id}`);
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/admin/issues/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data.success) {
         const issueData = response.data.data;
         setIssue(issueData);
@@ -114,18 +117,21 @@ const AdminIssueDetail: React.FC = () => {
 
   const handleUpdateStatus = async () => {
     if (!newStatus || newStatus === issue?.status) return;
-    
+
     try {
       setIsSubmitting(true);
+      const token = localStorage.getItem('adminToken');
       await axios.put(`${API_URL}/admin/issues/${id}/status`, {
         status: newStatus,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast({
         title: 'Success',
         description: 'Issue status updated successfully',
       });
-      
+
       fetchIssueDetail();
     } catch (err: any) {
       toast({
@@ -140,18 +146,21 @@ const AdminIssueDetail: React.FC = () => {
 
   const handleUpdatePriority = async () => {
     if (!newPriority || newPriority === issue?.priority) return;
-    
+
     try {
       setIsSubmitting(true);
+      const token = localStorage.getItem('adminToken');
       await axios.put(`${API_URL}/admin/issues/${id}/priority`, {
         priority: newPriority,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast({
         title: 'Success',
         description: 'Priority updated successfully',
       });
-      
+
       fetchIssueDetail();
     } catch (err: any) {
       toast({
@@ -166,19 +175,22 @@ const AdminIssueDetail: React.FC = () => {
 
   const handleAddNote = async () => {
     if (!adminNote.trim()) return;
-    
+
     try {
       setIsSubmitting(true);
+      const token = localStorage.getItem('adminToken');
       await axios.post(`${API_URL}/admin/issues/${id}/notes`, {
         note: adminNote,
         isPublic: isPublicNote,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast({
         title: 'Success',
         description: 'Note added successfully',
       });
-      
+
       setAdminNote('');
       setIsPublicNote(false);
       fetchIssueDetail();
@@ -202,18 +214,21 @@ const AdminIssueDetail: React.FC = () => {
       });
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
+      const token = localStorage.getItem('adminToken');
       await axios.put(`${API_URL}/admin/issues/${id}/reject`, {
         rejectionReason,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       toast({
         title: 'Success',
         description: 'Issue rejected successfully',
       });
-      
+
       fetchIssueDetail();
       setRejectionReason('');
     } catch (err: any) {
@@ -285,7 +300,7 @@ const AdminIssueDetail: React.FC = () => {
               <Badge variant="outline" className="capitalize">
                 {issue.category}
               </Badge>
-              
+
               {/* Blockchain Verification Badge */}
               <BlockchainVerification
                 issueId={issue._id}
@@ -449,8 +464,8 @@ const AdminIssueDetail: React.FC = () => {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={handleUpdateStatus}
                 disabled={isSubmitting || newStatus === issue.status}
               >
@@ -477,8 +492,8 @@ const AdminIssueDetail: React.FC = () => {
                   <SelectItem value="urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={handleUpdatePriority}
                 disabled={isSubmitting || newPriority === issue.priority}
               >
@@ -514,8 +529,8 @@ const AdminIssueDetail: React.FC = () => {
                   Make this note public (visible to reporter)
                 </label>
               </div>
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={handleAddNote}
                 disabled={isSubmitting || !adminNote.trim()}
               >
@@ -540,9 +555,9 @@ const AdminIssueDetail: React.FC = () => {
                   onChange={(e) => setRejectionReason(e.target.value)}
                   rows={3}
                 />
-                <Button 
+                <Button
                   variant="destructive"
-                  className="w-full" 
+                  className="w-full"
                   onClick={handleReject}
                   disabled={isSubmitting || !rejectionReason.trim()}
                 >

@@ -37,9 +37,14 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
+      const token = localStorage.getItem('adminToken');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
       const [metricsRes, trendsRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/dashboard/metrics`),
-        axios.get(`${API_URL}/admin/dashboard/trends`),
+        axios.get(`${API_URL}/admin/dashboard/metrics`, config),
+        axios.get(`${API_URL}/admin/dashboard/trends`, config),
       ]);
 
       // Backend returns { metrics, issuesByPriority, issuesByCategory, recentIssues }
@@ -62,11 +67,11 @@ const AdminDashboard: React.FC = () => {
 
   const statusData = metrics
     ? [
-        { name: 'Pending', value: metrics.pendingIssues, color: '#fbbf24' },
-        { name: 'In Progress', value: metrics.inProgressIssues, color: '#3b82f6' },
-        { name: 'Resolved', value: metrics.resolvedIssues, color: '#10b981' },
-        { name: 'Rejected', value: metrics.rejectedIssues, color: '#ef4444' },
-      ]
+      { name: 'Pending', value: metrics.pendingIssues, color: '#fbbf24' },
+      { name: 'In Progress', value: metrics.inProgressIssues, color: '#3b82f6' },
+      { name: 'Resolved', value: metrics.resolvedIssues, color: '#10b981' },
+      { name: 'Rejected', value: metrics.rejectedIssues, color: '#ef4444' },
+    ]
     : [];
 
   if (isLoading) {

@@ -10,8 +10,17 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
   try {
     const { name, email, password } = req.body;
 
+    // Basic validation
+    if (!name || !email || !password) {
+      res.status(400).json({ success: false, message: 'Name, email and password are required.' });
+      return;
+    }
+
+    // Normalize email to avoid case-sensitivity / accidental whitespace issues
+    const normalizedEmail = String(email).toLowerCase().trim();
+
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       res.status(400).json({
         success: false,
@@ -24,7 +33,7 @@ export const signup = async (req: AuthRequest, res: Response): Promise<void> => 
     // Create new user
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password,
     });
     console.log('✅ User created and saved to DB:', user);
@@ -72,8 +81,15 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      res.status(400).json({ success: false, message: 'Email and password are required.' });
+      return;
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+
     // Find user and include password
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
     
     if (!user) {
       res.status(401).json({

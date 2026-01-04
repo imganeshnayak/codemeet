@@ -44,7 +44,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       const response = await fetch(`/api/chat/history/${sessionId}`);
       const data = await response.json();
       console.log('📚 History data:', data);
-      
+
       if (data.messages && data.messages.length > 0) {
         console.log('✅ Loaded', data.messages.length, 'messages from history');
         setMessages(data.messages);
@@ -97,12 +97,17 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ API Error:', errorText);
-        throw new Error('Failed to get response');
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.details || errorJson.error || 'Failed to get response');
+        } catch (e) {
+          throw new Error('Failed to get response: ' + response.statusText);
+        }
       }
 
       const data = await response.json();
       console.log('✅ Received data:', data);
-      
+
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.response,
@@ -114,7 +119,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       console.error('💥 Chat error:', error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again later.`,
         timestamp: new Date()
       }]);
     } finally {
@@ -152,9 +157,8 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex gap-3 ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
+                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'
+                  }`}
               >
                 {message.role === 'assistant' && (
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
@@ -162,11 +166,10 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
                   </div>
                 )}
                 <div
-                  className={`max-w-[75%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
+                  className={`max-w-[75%] rounded-lg p-3 ${message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                    }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <p className="text-xs opacity-70 mt-1">

@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Camera, Plus, Filter, MessageCircle, ThumbsUp } from 'lucide-react';
+import { MapPin, Camera, Plus, Filter, MessageCircle, ThumbsUp, Shield, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/AppLayout';
 import Chatbot from '@/components/Chatbot';
+import IssueCard from '@/components/IssueCard';
 import React, { Suspense, useEffect } from 'react';
 import dynamic from 'react';
 import Autoplay from 'embla-carousel-autoplay';
@@ -102,44 +103,67 @@ const Home = () => {
 
   // Automatically capture geolocation when opening the report modal
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [locationPermissionAsked, setLocationPermissionAsked] = useState(false);
   const navigate = useNavigate();
+
+  // Request geolocation permission on component mount for better UX
   React.useEffect(() => {
-    if (reportDialogOpen && navigator.geolocation) {
+    if (!locationPermissionAsked && navigator.geolocation) {
+      setLocationPermissionAsked(true);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setFormData((prev) => ({ ...prev, location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }));
-          toast({
-            title: 'Location detected',
-            description: 'Your current location has been set automatically.',
-          });
+          console.log('📍 Location auto-detected:', pos.coords.latitude, pos.coords.longitude);
         },
         (error) => {
-          console.error('Geolocation error:', error);
-          let errorMessage = 'Unable to get your location. Please select it manually on the map.';
-          
-          if (error.code === error.PERMISSION_DENIED) {
-            errorMessage = 'Location permission denied. Please enable location access or select manually on the map.';
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            errorMessage = 'Location information unavailable. Please select manually on the map.';
-          } else if (error.code === error.TIMEOUT) {
-            errorMessage = 'Location request timed out. Please select manually on the map.';
-          }
-          
-          toast({
-            title: 'Location not available',
-            description: errorMessage,
-            variant: 'default',
-          });
+          console.warn('Geolocation permission not granted or failed:', error);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
       );
+    }
+  }, [locationPermissionAsked]);
+
+  // Re-request geolocation when dialog opens if not already set
+  React.useEffect(() => {
+    if (reportDialogOpen && navigator.geolocation) {
+      // Check if location is still default (New York)
+      if (formData.location.lat === 40.7128 && formData.location.lng === -74.0060) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setFormData((prev) => ({ ...prev, location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }));
+            toast({
+              title: '📍 Location detected',
+              description: 'Your current location has been set automatically.',
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            let errorMessage = 'Unable to get your location. Please select it manually on the map.';
+
+            if (error.code === error.PERMISSION_DENIED) {
+              errorMessage = 'Location permission denied. Please enable location access in your browser settings or select manually on the map.';
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+              errorMessage = 'Location information unavailable. Please select manually on the map.';
+            } else if (error.code === error.TIMEOUT) {
+              errorMessage = 'Location request timed out. Please select manually on the map.';
+            }
+
+            toast({
+              title: 'Location not available',
+              description: errorMessage,
+              variant: 'default',
+            });
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      }
     }
   }, [reportDialogOpen, toast]);
 
   // Generate AI report and navigate to summary page
   const handleGenerateReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Enhanced system prompt for professional government report format
     const systemPrompt = `You are a professional civic issue report writer for government authorities.
 
@@ -173,7 +197,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
     let aiSummary = '';
     try {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -191,12 +215,12 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
     } catch (err) {
       aiSummary = 'AI summary could not be generated.';
     }
-  // Include images stored in localStorage when generating the report
-  const report = { ...formData, aiSummary, photos: localImages };
-  navigate('/report-summary', { state: { report } });
-  // clear local images after generating report to avoid stale data
-  setLocalImages([]);
-  localStorage.removeItem('report_images');
+    // Include images stored in localStorage when generating the report
+    const report = { ...formData, aiSummary, photos: localImages };
+    navigate('/report-summary', { state: { report } });
+    // clear local images after generating report to avoid stale data
+    setLocalImages([]);
+    localStorage.removeItem('report_images');
   };
 
   // client-only flag to avoid rendering react-leaflet during SSR/hydration
@@ -211,7 +235,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
   const loadCommunityIssues = async () => {
     setLoadingIssues(true);
     try {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues?limit=20`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/issues?limit=20`);
       if (res.ok) {
         const data = await res.json();
         setCommunityIssues(data.data?.issues || []);
@@ -226,7 +250,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
     }
   };
 
-  const handleVote = async (issueId: string) => {
+  const handleVote = useCallback(async (issueId: string) => {
     try {
       const token = localStorage.getItem('jan_awaaz_token');
       if (!token) {
@@ -234,7 +258,14 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         return;
       }
 
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}/vote`, {
+      // Optimistic update - update UI immediately
+      setCommunityIssues(prev => prev.map(issue =>
+        issue._id === issueId
+          ? { ...issue, votes: (issue.votes || 0) + 1 }
+          : issue
+      ));
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -244,8 +275,6 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
       if (res.ok) {
         toast({ title: 'Vote Recorded!', description: 'Your vote has been counted.' });
-        // Reload issues to reflect new vote count
-        loadCommunityIssues();
         // If detail dialog is open, refresh the selected issue
         if (selectedIssue && selectedIssue._id === issueId) {
           const issueRes = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}`);
@@ -255,15 +284,27 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
           }
         }
       } else {
+        // Rollback optimistic update on error
+        setCommunityIssues(prev => prev.map(issue =>
+          issue._id === issueId
+            ? { ...issue, votes: Math.max(0, (issue.votes || 0) - 1) }
+            : issue
+        ));
         const err = await res.json();
         toast({ title: 'Error', description: err.message || 'Failed to vote', variant: 'destructive' });
       }
     } catch (err) {
+      // Rollback optimistic update on error
+      setCommunityIssues(prev => prev.map(issue =>
+        issue._id === issueId
+          ? { ...issue, votes: Math.max(0, (issue.votes || 0) - 1) }
+          : issue
+      ));
       toast({ title: 'Error', description: 'Failed to vote', variant: 'destructive' });
     }
-  };
+  }, [selectedIssue, toast]);
 
-  const handleViewDetails = async (issueId: string) => {
+  const handleViewDetails = useCallback(async (issueId: string) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}`);
       if (res.ok) {
@@ -276,7 +317,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to load issue details', variant: 'destructive' });
     }
-  };
+  }, [toast]);
 
   const handleSubmitComment = async () => {
     if (!commentText.trim()) {
@@ -292,7 +333,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         return;
       }
 
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${selectedIssue._id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${selectedIssue._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -314,7 +355,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         toast({ title: 'Comment Added!', description: 'Your comment has been posted.' });
         setCommentText('');
         // Refresh issue details
-  const issueRes = await fetch(`${import.meta.env.VITE_API_URL}/issues/${selectedIssue._id}`);
+        const issueRes = await fetch(`${import.meta.env.VITE_API_URL}/issues/${selectedIssue._id}`);
         if (issueRes.ok) {
           const issueData = await issueRes.json();
           setSelectedIssue(issueData.data.issue);
@@ -331,7 +372,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
     }
   };
 
-  const filteredIssues = communityIssues.filter(issue => 
+  const filteredIssues = communityIssues.filter(issue =>
     selectedTab === 'all' || issue.status === selectedTab
   );
 
@@ -357,75 +398,14 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
             // Show grid for 3 or fewer issues
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {communityIssues.map((issue, index) => (
-                <motion.div
+                <IssueCard
                   key={issue._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card className="p-4 hover:shadow-lg smooth-transition">
-                    <div 
-                      className="cursor-pointer" 
-                      onClick={() => handleViewDetails(issue._id)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <Badge className={statusColors[issue.status] || 'status-pending'}>
-                          {issue.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(issue.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      
-                      <h3 className="font-semibold mb-2">{issue.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {issue.description}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            <span className="line-clamp-1">
-                              {issue.location?.address || 'Location not specified'}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {issue.category}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Vote and Comment Buttons */}
-                    <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <ThumbsUp className="w-4 h-4" />
-                          <span>{issue.votes || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MessageCircle className="w-4 h-4" />
-                          <span>{issue.comments?.length || 0}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleVote(issue._id);
-                          }}
-                          className="gap-1"
-                        >
-                          <ThumbsUp className="w-3 h-3" />
-                          Vote
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+                  issue={issue}
+                  index={index}
+                  onViewDetails={handleViewDetails}
+                  onVote={handleVote}
+                  statusColors={statusColors}
+                />
               ))}
             </div>
           ) : (
@@ -452,8 +432,8 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                       className="h-full"
                     >
                       <Card className="p-4 hover:shadow-lg smooth-transition h-full">
-                        <div 
-                          className="cursor-pointer flex flex-col h-full" 
+                        <div
+                          className="cursor-pointer flex flex-col h-full"
                           onClick={() => handleViewDetails(issue._id)}
                         >
                           <div className="flex items-start justify-between mb-3">
@@ -464,12 +444,12 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                               {new Date(issue.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          
+
                           <h3 className="font-semibold mb-2">{issue.title}</h3>
                           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                             {issue.description}
                           </p>
-                          
+
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <div className="flex items-center gap-1">
@@ -501,13 +481,14 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                             size="sm"
                             variant="ghost"
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
                               handleVote(issue._id);
                             }}
-                            className="gap-1"
+                            className="gap-1 touch-manipulation"
                           >
                             <ThumbsUp className="w-3 h-3" />
-                            Vote
+                            <span className="hidden sm:inline">Vote</span>
                           </Button>
                         </div>
                       </Card>
@@ -527,7 +508,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
             <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Report City Issues</h1>
             <p className="text-sm sm:text-base text-muted-foreground">Help improve our community by reporting issues</p>
           </div>
-          
+
           <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
             <DialogTrigger asChild>
               <Button size="lg" className="gap-2 w-full sm:w-auto" onClick={() => setReportDialogOpen(true)}>
@@ -567,10 +548,10 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                            <SelectItem key={cat.value} value={cat.value}>
-                              {cat.label}
-                            </SelectItem>
-                          ))}
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -741,12 +722,12 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                   </Badge>
                   <span className="text-xs text-muted-foreground">{issue.date}</span>
                 </div>
-                
+
                 <h3 className="font-semibold mb-2">{issue.title}</h3>
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                   {issue.description}
                 </p>
-                
+
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
@@ -803,6 +784,12 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                       </Badge>
                       <Badge variant="outline">{selectedIssue.category}</Badge>
                       <Badge variant="outline">{selectedIssue.priority} priority</Badge>
+                      {selectedIssue.blockchainVerified && (
+                        <Badge className="bg-blue-600 hover:bg-blue-700">
+                          <Shield className="w-3 h-3 mr-1" />
+                          Blockchain Verified
+                        </Badge>
+                      )}
                       <span className="text-xs">
                         {new Date(selectedIssue.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
@@ -863,6 +850,69 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                   </div>
                 )}
 
+                {/* Blockchain Verification */}
+                {selectedIssue.blockchainTxHash && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 className="font-semibold mb-2 flex items-center gap-2 text-blue-900">
+                      <Shield className="w-4 h-4" />
+                      Blockchain Verification
+                    </h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-sm font-medium text-blue-800 mb-1">Transaction Hash</p>
+                        <code className="text-xs bg-white p-2 rounded block break-all border border-blue-200">
+                          {selectedIssue.blockchainTxHash}
+                        </code>
+                      </div>
+                      {selectedIssue.blockchainTimestamp && (
+                        <p className="text-sm text-blue-700">
+                          Recorded on: {new Date(selectedIssue.blockchainTimestamp).toLocaleString()}
+                        </p>
+                      )}
+                      <a
+                        href={`https://sepolia.etherscan.io/tx/${selectedIssue.blockchainTxHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View on Etherscan
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Notes (Public Only) */}
+                {selectedIssue.adminNotes && selectedIssue.adminNotes.filter((note: any) => note.isPublic).length > 0 && (
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" />
+                      Official Updates from Administration
+                    </h3>
+                    <div className="space-y-3">
+                      {selectedIssue.adminNotes
+                        .filter((note: any) => note.isPublic)
+                        .map((note: any, idx: number) => (
+                          <div key={idx} className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-start justify-between mb-2">
+                              <span className="font-medium text-sm text-amber-900">Admin Update</span>
+                              <span className="text-xs text-amber-700">
+                                {new Date(note.timestamp).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-amber-900">{note.note}</p>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Vote Section */}
                 <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-2">
@@ -885,7 +935,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                     <MessageCircle className="w-4 h-4" />
                     Comments ({selectedIssue.comments?.length || 0})
                   </h3>
-                  
+
                   {/* Comment Input */}
                   <div className="mb-4">
                     <Textarea

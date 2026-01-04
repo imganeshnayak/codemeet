@@ -1,46 +1,34 @@
-// Test OpenRouter API directly
-
-const OPENROUTER_API_KEY = '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';
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const axios = require('axios');
 
 async function testOpenRouter() {
-  console.log('🧪 Testing OpenRouter API...\n');
-  
-  try {
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'http://localhost:5173',
-        'X-Title': 'CodeMeet - Test',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: 'Say hello in one sentence'
-          }
-        ]
-      })
-    });
+  const apiKey = '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';
+  const model = 'meta-llama/llama-3.3-70b-instruct:free';
 
-    console.log('📡 Response Status:', response.status);
-    
-    const text = await response.text();
-    console.log('\n📄 Raw Response:', text);
-    
-    if (response.ok) {
-      const data = JSON.parse(text);
-      console.log('\n✅ Success!');
-      console.log('AI Response:', data.choices[0].message.content);
-    } else {
-      console.log('\n❌ Error:', text);
-    }
+  console.log(`Testing OpenRouter with model: ${model}`);
+
+  try {
+
+    const response = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        model: model,
+        messages: [
+          { role: 'user', content: 'Hello, how are you?' }
+        ]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    console.log('Status:', response.status);
+    console.log('Response:', JSON.stringify(response.data, null, 2));
   } catch (error) {
-    console.error('\n💥 Exception:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('Error:', error.response ? error.response.data : error.message);
+    console.error('Status:', error.response?.status);
   }
 }
 

@@ -56,13 +56,13 @@ const AdminIssuesList: React.FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -85,7 +85,11 @@ const AdminIssuesList: React.FC = () => {
       if (categoryFilter !== 'all') params.category = categoryFilter;
       if (priorityFilter !== 'all') params.priority = priorityFilter;
 
-      const response = await axios.get(`${API_URL}/admin/issues`, { params });
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${API_URL}/admin/issues`, {
+        params,
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       if (response.data.success) {
         setIssues(response.data.data.issues);

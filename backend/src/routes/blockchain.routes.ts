@@ -5,7 +5,7 @@ import {
   verifyBlockchainTransaction,
   getBlockchainVerifiedIssues
 } from '../controllers/blockchainController';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticateAdmin } from '../middleware/adminAuth.middleware';
 
 const router = Router();
 
@@ -18,7 +18,7 @@ router.get('/verified-issues', getBlockchainVerifiedIssues);
 // Verify a blockchain transaction
 router.get('/verify/:txHash', verifyBlockchainTransaction);
 
-// Record an issue on blockchain (protected route)
-router.post('/record-issue/:issueId', authenticate, recordIssueOnBlockchain);
+// Record an issue on blockchain (admin only)
+router.post('/record-issue/:issueId', authenticateAdmin, recordIssueOnBlockchain);
 
 export default router;
