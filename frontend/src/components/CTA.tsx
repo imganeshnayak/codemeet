@@ -49,38 +49,38 @@ const FAQ = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-white text-slate-900">
-      <div className="container">
-        <h2 className="text-lg sm:text-3xl md:text-5xl lg:text-6xl font-extrabold uppercase mb-10 text-slate-900 text-center w-full whitespace-nowrap tracking-tight leading-none">
+    <section className="py-12 sm:py-20 bg-white text-slate-900">
+      <div className="container px-4 sm:px-6">
+        <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold uppercase mb-8 sm:mb-10 text-slate-900 text-center w-full tracking-tight leading-tight px-4">
           Frequently Asked Questions
         </h2>
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
           {faqs.map((item, idx) => (
             <details
               key={idx}
-              className="group rounded-3xl p-6 md:p-8 shadow-sm opacity-0"
+              className="group rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm opacity-0"
               ref={(el) => (faqRefs.current[idx] = el)}
               style={{
                 background: "linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--primary) / 0.10))",
                 animationDelay: `${idx * 120}ms`,
               }}
             >
-              <summary className="list-none flex items-center gap-6 cursor-pointer">
-                <span className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+              <summary className="list-none flex items-center gap-3 sm:gap-6 cursor-pointer">
+                <span className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                   <ChevronRight
-                    className="w-5 h-5 transform transition-transform duration-300 group-open:rotate-90"
+                    className="w-4 h-4 sm:w-5 sm:h-5 transform transition-transform duration-300 group-open:rotate-90"
                     style={{ color: "hsl(var(--primary))" }}
                   />
                 </span>
                 <span
-                  className="font-extrabold uppercase text-lg md:text-xl"
+                  className="font-extrabold uppercase text-sm sm:text-base md:text-lg lg:text-xl"
                   style={{ color: "hsl(var(--primary))" }}
                 >
                   {item.q}
                 </span>
               </summary>
 
-              <div className="mt-4 text-sm md:text-base text-slate-900 max-w-5xl overflow-hidden max-h-0 transition-[max-height] duration-300 ease-out group-open:max-h-[240px]">
+              <div className="mt-4 text-sm sm:text-base text-slate-900 max-w-5xl overflow-hidden max-h-0 transition-[max-height] duration-300 ease-out group-open:max-h-[240px] pl-0 sm:pl-[72px]">
                 {item.a}
               </div>
             </details>
