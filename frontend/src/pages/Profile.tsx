@@ -13,10 +13,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
+import { UserBlockchainBadge } from '@/components/UserBlockchainBadge';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 // API Base URL
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://codemeet-yaus.onrender.com/api';
 
 // Activity interface
 interface Activity {
@@ -25,6 +26,9 @@ interface Activity {
   title: string;
   date: string;
   status: string;
+  blockchainTxHash?: string;
+  blockchainVerified?: boolean;
+  blockchainTimestamp?: string;
 }
 
 // User Stats interface
@@ -683,9 +687,19 @@ const Profile = () => {
                               })}
                             </p>
                           </div>
-                          <Badge className={`status-${activity.status}`}>
-                            {activity.status}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`status-${activity.status}`}>
+                              {activity.status}
+                            </Badge>
+                            {activity.blockchainVerified && (
+                              <UserBlockchainBadge
+                                blockchainTxHash={activity.blockchainTxHash}
+                                blockchainVerified={activity.blockchainVerified}
+                                blockchainTimestamp={activity.blockchainTimestamp}
+                                compact={true}
+                              />
+                            )}
+                          </div>
                         </motion.div>
                       ))}
                     </div>

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { OpenAI } from 'openai';
 import ChatHistory from '../models/ChatHistory';
+import { detectLanguage, translateText, getLanguageName } from '../utils/translator';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -26,38 +27,102 @@ interface AuthRequest extends Request {
 // Send a message and get AI response
 export const sendMessage = async (req: AuthRequest, res: Response) => {
   try {
-    const { message, sessionId } = req.body;
+    const { message, sessionId, ignoreHistory } = req.body;
     const userId = req.user?.id || null; // Optional - supports anonymous chat
 
-    console.log('💬 Received chat message:', { message, sessionId, userId });
+    console.log('💬 Received chat message:', { message, sessionId, userId, ignoreHistory });
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Fetch chat history for context
-    const chatHistory = await ChatHistory.findOne({
-      $or: [
-        { userId: userId },
-        { sessionId: sessionId }
-      ]
-    }).sort({ createdAt: -1 });
+    // Detect user's language from their message
+    const userLanguage = detectLanguage(message);
+    const languageName = getLanguageName(userLanguage);
+    console.log(`🌍 Detected language: ${languageName} (${userLanguage})`);
 
     // Build messages array with history
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: 'You are CivicBot, a helpful civic engagement assistant. Introduce yourself as CivicBot. Help users report city issues, find information about their community, and answer questions about civic services. Answer in a clear, conversational, and well-structured way, just like ChatGPT. Use Markdown formatting for headings, lists, and highlights.'
+        content: `You are CivicBot, a helpful civic engagement assistant. Introduce yourself as CivicBot.
+
+Help users report city issues, find information about their community, and answer questions about civic services.
+
+IMPORTANT FORMATTING RULES - YOU MUST FOLLOW THESE:
+1. **Use Markdown Headings**: Start with ## for main sections, ### for subsections
+2. **Use Bullet Points**: Use - or * for lists (never plain text lists)
+3. **Use Numbered Lists**: Use 1., 2., 3. for sequential steps
+4. **Use Bold Text**: Use **bold** for emphasis on important words or phrases
+5. **Use Separators**: Use --- to create visual breaks between major sections
+6. **Use Emojis**: Add relevant emojis (✅ ❌ 💡 🔹 📌 etc.) to make content engaging
+7. **Short Paragraphs**: Keep paragraphs to 2-3 sentences max
+8. **Clear Structure**: Always organize information hierarchically
+9. **Visual Hierarchy**: Use spacing and formatting to create scannable content
+10. **Use Code Blocks**: Use \`backticks\` for technical terms or specific values
+
+EXAMPLE FORMAT FOR YOUR RESPONSES:
+
+## 📋 Main Topic
+
+Brief introduction (1-2 sentences).
+
+### ✅ Step-by-Step Guide:
+
+1. **First Step** - Brief description
+2. **Second Step** - Brief description
+3. **Third Step** - Brief description
+
+---
+
+### 💡 Important Points:
+
+- **Point one** - Explanation
+- **Point two** - Explanation
+- **Point three** - Explanation
+
+---
+
+### 🔹 Additional Information:
+
+Short paragraph with **key terms highlighted**.
+
+---
+
+Would you like help with something specific? Let me know! 😊
+
+REMEMBER: Always structure your responses clearly with headings, lists, and visual elements!`
       }
     ];
 
-    // Add last 10 messages from history for context
-    if (chatHistory && chatHistory.messages) {
-      const recentMessages = chatHistory.messages.slice(-10);
-      messages.push(...recentMessages.map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content
-      })));
+    // Only fetch and use chat history if ignoreHistory is not true
+    let chatHistory = null;
+    if (!ignoreHistory && (userId || sessionId)) {
+      // Only fetch history if we have a valid userId or sessionId
+      const query: any = {};
+      
+      if (userId && sessionId) {
+        query.$or = [
+          { userId: userId },
+          { sessionId: sessionId }
+        ];
+      } else if (userId) {
+        query.userId = userId;
+      } else if (sessionId) {
+        query.sessionId = sessionId;
+      }
+
+      // Fetch chat history for context
+      chatHistory = await ChatHistory.findOne(query).sort({ createdAt: -1 });
+
+      // Add last 10 messages from history for context
+      if (chatHistory && chatHistory.messages) {
+        const recentMessages = chatHistory.messages.slice(-10);
+        messages.push(...recentMessages.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        })));
+      }
     }
 
     // Add current user message
@@ -95,28 +160,59 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         console.error('❌ Unexpected Hugging Face router response', chatCompletion);
         return res.status(502).json({ error: 'Hugging Face router returned unexpected response', details: chatCompletion });
       }
-      console.log('✅ HF Router Response:', aiResponse);
+      console.log('✅ HF Router Response (English):', aiResponse.substring(0, 100) + '...');
 
-      // Save to chat history
-      const newMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }> = [
-        { role: 'user' as const, content: message, timestamp: new Date() },
-        { role: 'assistant' as const, content: aiResponse, timestamp: new Date() }
-      ];
+      // Translate response to user's language if not English
+      let finalResponse = aiResponse;
+      let translationNote = '';
+      if (userLanguage !== 'en') {
+        console.log(`🔄 Translating response to ${languageName}...`);
+        try {
+          const translatedText = await translateText(aiResponse, 'en', userLanguage);
+          
+          // Check if translation actually happened (it will return original if not supported)
+          if (translatedText !== aiResponse) {
+            finalResponse = translatedText;
+            console.log(`✅ Translation complete:`, finalResponse.substring(0, 100) + '...');
+          } else {
+            // Translation not available for this language
+            console.log(`⚠️ Translation not available for ${languageName}, using English`);
+            translationNote = `\n\n---\n\n*Note: Full ${languageName} translation is not yet available. Response provided in English.*`;
+            finalResponse = aiResponse + translationNote;
+          }
+        } catch (translateError) {
+          console.error('⚠️ Translation failed, using English response:', translateError);
+          translationNote = `\n\n---\n\n*Note: Translation service temporarily unavailable. Response provided in English.*`;
+          finalResponse = aiResponse + translationNote;
+        }
+      }
 
-      if (chatHistory) {
-        chatHistory.messages.push(...newMessages);
-        await chatHistory.save();
-      } else {
-        await ChatHistory.create({
-          userId: userId,
-          sessionId: sessionId || `anon-${Date.now()}`,
-          messages: newMessages
-        });
+      // Save to chat history only if not ignoring history and we have a valid session
+      if (!ignoreHistory && (userId || sessionId)) {
+        const newMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: Date }> = [
+          { role: 'user' as const, content: message, timestamp: new Date() },
+          { role: 'assistant' as const, content: finalResponse, timestamp: new Date() }
+        ];
+
+        if (chatHistory) {
+          chatHistory.messages.push(...newMessages);
+          await chatHistory.save();
+        } else {
+          // Create new chat history only if we have a sessionId
+          const effectiveSessionId = sessionId || (userId ? `user-${userId}` : `anon-${Date.now()}`);
+          await ChatHistory.create({
+            userId: userId,
+            sessionId: effectiveSessionId,
+            messages: newMessages
+          });
+        }
       }
 
       res.json({
-        response: aiResponse,
-        sessionId: chatHistory?.sessionId || sessionId
+        response: finalResponse,
+        sessionId: chatHistory?.sessionId || sessionId,
+        detectedLanguage: userLanguage,
+        languageName: languageName
       });
     } catch (err: any) {
       console.error('❌ Hugging Face router request error:', err?.message || err);

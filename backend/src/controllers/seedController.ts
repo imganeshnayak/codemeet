@@ -1,4 +1,5 @@
 import Issue from "../models/Issue";
+import User from "../models/User";
 import { Request, Response } from "express";
 
 export const seedIssues = async (req: Request, res: Response) => {
@@ -163,5 +164,62 @@ export const seedIssues = async (req: Request, res: Response) => {
     res.json({ success: true, message: "Seeded 10 issues" });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to seed issues", error: err });
+  }
+};
+
+// Create admin user
+export const createAdmin = async (req: Request, res: Response) => {
+  try {
+    // Security: Only allow admin creation if no admins exist
+    const existingAdmins = await User.countDocuments({ role: 'admin' });
+    if (existingAdmins > 0) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Admin user already exists. For security, this endpoint is disabled." 
+      });
+    }
+
+    const { email, password, name } = req.body;
+
+    if (!email || !password || !name) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Please provide name, email, and password" 
+      });
+    }
+
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User with this email already exists" 
+      });
+    }
+
+    // Create admin user
+    const admin = await User.create({
+      name,
+      email,
+      password,
+      role: 'admin'
+    });
+
+    res.json({ 
+      success: true, 
+      message: "Admin user created successfully",
+      data: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to create admin user", 
+      error: err.message 
+    });
   }
 };

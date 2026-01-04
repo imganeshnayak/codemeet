@@ -1,9 +1,11 @@
 import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 
 export interface TokenPayload {
-  userId: string;
+  userId?: string;  // For regular users
+  id?: string;      // For admins
   email: string;
   role: string;
+  type?: string;    // 'admin' for admin tokens
 }
 
 export const generateAccessToken = (payload: TokenPayload): string => {

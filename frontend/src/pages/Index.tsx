@@ -31,7 +31,7 @@ const Index = () => {
 
   useEffect(() => {
     let mounted = true;
-    fetch('/api/home')
+  fetch(`${import.meta.env.VITE_API_URL}/home`)
       .then((res) => res.json())
       .then((json) => {
         if (!mounted) return;
