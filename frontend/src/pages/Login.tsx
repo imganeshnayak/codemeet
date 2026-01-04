@@ -49,32 +49,32 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Link to="/" className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl overflow-hidden">
-            <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-12 h-12 object-cover" />
+        <Link to="/" className="flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden">
+            <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-10 h-10 sm:w-12 sm:h-12 object-cover" />
           </div>
           <div>
-            <h1 className="font-bold text-2xl">Jan Awaaz</h1>
-            <p className="text-sm text-muted-foreground">City Services Platform</p>
+            <h1 className="font-bold text-xl sm:text-2xl">Jan Awaaz</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">City Services Platform</p>
           </div>
         </Link>
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome Back</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">Welcome Back</CardTitle>
+            <CardDescription className="text-sm">
               Sign in to access your civic services dashboard
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input

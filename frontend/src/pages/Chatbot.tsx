@@ -63,59 +63,59 @@ export default function Chatbot() {
 
   return (
     <AppLayout>
-      <div className="relative flex flex-col h-[calc(100vh-4rem)] bg-background text-foreground max-w-4xl mx-auto shadow-lg rounded-2xl overflow-hidden border border-border">
+      <div className="relative flex flex-col h-[calc(100vh-4rem)] bg-background text-foreground max-w-4xl mx-auto shadow-lg rounded-none sm:rounded-2xl overflow-hidden border-0 sm:border border-border">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b border-border bg-card flex items-center gap-3">
-        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-          <Sparkles className="w-6 h-6 text-primary" />
+        <div className="p-3 sm:p-4 md:p-6 border-b border-border bg-card flex items-center gap-2 sm:gap-3">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center">
+          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Jan Awaaz Assistant</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold">Jan Awaaz Assistant</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             AI-powered civic reporting helper
           </p>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="p-4 border-b border-border bg-muted/30 grid grid-cols-3 md:grid-cols-6 gap-3">
-        <Button variant="secondary" className="flex items-center gap-2">
-          <MapPin className="w-4 h-4" /> Report
+      <div className="p-2 sm:p-4 border-b border-border bg-muted/30 grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
+        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4" aria-label="Report Issue">
+          <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden xs:inline sm:inline">Report</span>
         </Button>
-        <Button variant="secondary" className="flex items-center gap-2">
-          <Bell className="w-4 h-4" /> Alerts
+        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4" aria-label="View Alerts">
+          <Bell className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden xs:inline sm:inline">Alerts</span>
         </Button>
-        <Button variant="secondary" className="flex items-center gap-2">
-          <Info className="w-4 h-4" /> Info
+        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4" aria-label="Get Information">
+          <Info className="w-3 h-3 sm:w-4 sm:h-4" /> Info
         </Button>
       </div>
 
       {/* Chat Section */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-background">
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <Card className={`max-w-xs md:max-w-lg ${m.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/40'}`}>
-              <CardContent className="p-3 prose prose-sm max-w-none dark:prose-invert">
+            <Card className={`max-w-[85%] sm:max-w-xs md:max-w-lg ${m.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted/40'}`}>
+              <CardContent className="p-2 sm:p-3 prose prose-sm max-w-none dark:prose-invert text-sm">
                 {m.sender === 'bot' ? (
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-4 mb-2 text-foreground" {...props} />,
-                      h3: ({node, ...props}) => <h3 className="text-base font-semibold mt-3 mb-2 text-foreground" {...props} />,
-                      p: ({node, ...props}) => <p className="mb-2 text-foreground" {...props} />,
-                      ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1 text-foreground" {...props} />,
-                      ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-foreground" {...props} />,
-                      li: ({node, ...props}) => <li className="text-foreground" {...props} />,
+                      h2: ({node, ...props}) => <h2 className="text-base sm:text-lg font-bold mt-3 sm:mt-4 mb-1 sm:mb-2 text-foreground" {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-sm sm:text-base font-semibold mt-2 sm:mt-3 mb-1 sm:mb-2 text-foreground" {...props} />,
+                      p: ({node, ...props}) => <p className="mb-1 sm:mb-2 text-foreground text-xs sm:text-sm" {...props} />,
+                      ul: ({node, ...props}) => <ul className="list-disc pl-4 sm:pl-5 mb-1 sm:mb-2 space-y-0.5 sm:space-y-1 text-foreground text-xs sm:text-sm" {...props} />,
+                      ol: ({node, ...props}) => <ol className="list-decimal pl-4 sm:pl-5 mb-1 sm:mb-2 space-y-0.5 sm:space-y-1 text-foreground text-xs sm:text-sm" {...props} />,
+                      li: ({node, ...props}) => <li className="text-foreground text-xs sm:text-sm" {...props} />,
                       strong: ({node, ...props}) => <strong className="font-bold text-foreground" {...props} />,
-                      code: ({node, ...props}) => <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono" {...props} />,
-                      hr: ({node, ...props}) => <hr className="my-4 border-border" {...props} />,
+                      code: ({node, ...props}) => <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono" {...props} />,
+                      hr: ({node, ...props}) => <hr className="my-2 sm:my-4 border-border" {...props} />,
                       a: ({node, ...props}) => <a className="text-blue-500 hover:underline" {...props} />,
                     }}
                   >
                     {m.text}
                   </ReactMarkdown>
                 ) : (
-                  <span className="text-primary-foreground">{m.text}</span>
+                  <span className="text-primary-foreground text-xs sm:text-sm">{m.text}</span>
                 )}
               </CardContent>
             </Card>
@@ -125,10 +125,10 @@ export default function Chatbot() {
       </div>
 
       {/* Chat Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-card flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="p-2 sm:p-4 border-t border-border bg-card flex items-center gap-1.5 sm:gap-2">
         <Input
           placeholder="Type your message..."
-          className="flex-1"
+          className="flex-1 text-sm sm:text-base"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
@@ -138,11 +138,11 @@ export default function Chatbot() {
             }
           }}
         />
-        <Button variant="outline" size="icon" type="button" onClick={() => !isSending && sendMessage(inputValue)}>
-          <Mic className="w-4 h-4" />
+        <Button variant="outline" size="icon" type="button" onClick={() => !isSending && sendMessage(inputValue)} className="h-9 w-9 sm:h-10 sm:w-10">
+          <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </Button>
-        <Button disabled={isSending} type="submit" size="icon" className="bg-primary text-primary-foreground">
-          <Send className="w-4 h-4" />
+        <Button disabled={isSending} type="submit" size="icon" className="bg-primary text-primary-foreground h-9 w-9 sm:h-10 sm:w-10">
+          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </Button>
 
         {/* Small robot iframe next to the send button (kept visually) */}
