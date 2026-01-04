@@ -79,13 +79,13 @@ export default function Chatbot() {
 
       {/* Quick Actions */}
       <div className="p-2 sm:p-4 border-b border-border bg-muted/30 grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
-        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
-          <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Report</span><span className="sm:hidden">Rep</span>
+        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4" aria-label="Report Issue">
+          <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden xs:inline sm:inline">Report</span>
         </Button>
-        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
-          <Bell className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Alerts</span><span className="sm:hidden">Alert</span>
+        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4" aria-label="View Alerts">
+          <Bell className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden xs:inline sm:inline">Alerts</span>
         </Button>
-        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+        <Button variant="secondary" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4" aria-label="Get Information">
           <Info className="w-3 h-3 sm:w-4 sm:h-4" /> Info
         </Button>
       </div>
