@@ -69,12 +69,33 @@ const Home = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setFormData((prev) => ({ ...prev, location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }));
+          toast({
+            title: 'Location detected',
+            description: 'Your current location has been set automatically.',
+          });
         },
-        () => {},
-        { enableHighAccuracy: true }
+        (error) => {
+          console.error('Geolocation error:', error);
+          let errorMessage = 'Unable to get your location. Please select it manually on the map.';
+          
+          if (error.code === error.PERMISSION_DENIED) {
+            errorMessage = 'Location permission denied. Please enable location access or select manually on the map.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMessage = 'Location information unavailable. Please select manually on the map.';
+          } else if (error.code === error.TIMEOUT) {
+            errorMessage = 'Location request timed out. Please select manually on the map.';
+          }
+          
+          toast({
+            title: 'Location not available',
+            description: errorMessage,
+            variant: 'default',
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
-  }, [reportDialogOpen]);
+  }, [reportDialogOpen, toast]);
 
   // Generate AI report and navigate to summary page
   const handleGenerateReport = async (e: React.FormEvent) => {
