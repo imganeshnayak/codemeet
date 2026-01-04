@@ -31,14 +31,14 @@ const Hero = ({ hero }: HeroProps) => {
 
       {/* Hero Content - Bottom Left Positioning */}
       <div className="relative z-10 h-full flex items-end">
-        <div className="container pb-20 md:pb-32">
+        <div className="container px-4 sm:px-6 pb-12 sm:pb-20 md:pb-32">
           <div className="max-w-3xl animate-fade-in-slow">
-            <h1 className="text-[50px] font-bold mb-6 text-white text-shadow leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[50px] font-bold mb-6 text-white text-shadow leading-tight">
               A Smart Platform that bridges Citizens and Authorities.
               <br />
               Report.Track.Resolve.
             </h1>
-            <p className="text-base md:text-lg lg:text-xl mb-8 text-white/90 text-shadow font-light max-w-2xl">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-8 text-white/90 text-shadow font-light max-w-2xl">
               Empowering citizens with a smart, transparent, and collaborative platform for civic issue reporting and resolution.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -46,19 +46,19 @@ const Hero = ({ hero }: HeroProps) => {
                 <Button
                   variant="hero"
                   size="lg"
-                  className="text-base md:text-lg px-8 py-6 h-auto"
+                  className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto w-full sm:w-auto"
                 >
                   {hero.cta}
-                  <ArrowRight className="ml-2" />
+                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </Link>
-              <Link to="/login">
+              <Link to="/login" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="text-base md:text-lg px-8 py-6 h-auto bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white"
+                  className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto w-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white"
                 >
-                  <Play className="mr-2" />
+                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                   Login
                 </Button>
               </Link>

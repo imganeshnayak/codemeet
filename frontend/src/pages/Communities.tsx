@@ -294,7 +294,7 @@ const Communities = () => {
 
   return (
     <AppLayout>
-      <div className="flex h-[calc(100vh-4rem)] md:h-screen">
+      <div className="flex h-[calc(100vh-4rem)] md:h-screen overflow-hidden">
         {/* Communities List (hidden on mobile when chat is open) */}
         <div
           className={`${
@@ -302,24 +302,24 @@ const Communities = () => {
           } flex-col w-full md:w-80 lg:w-96 border-r border-border bg-card`}
         >
           {/* Header */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center justify-between mb-3">
-              <h1 className="text-2xl font-bold">Communities</h1>
+          <div className="p-3 sm:p-4 border-b border-border">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <h1 className="text-xl sm:text-2xl font-bold">Communities</h1>
               {isAuthenticated && (
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button size="icon" variant="default">
+                    <Button size="icon" variant="default" className="h-9 w-9 sm:h-10 sm:w-10">
                       <Plus className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Create New Community</DialogTitle>
-                      <DialogDescription>
+                      <DialogTitle className="text-lg sm:text-xl">Create New Community</DialogTitle>
+                      <DialogDescription className="text-sm">
                         Start a new community to connect with others
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Community Name *</Label>
                         <Input

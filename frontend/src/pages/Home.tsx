@@ -108,12 +108,33 @@ const Home = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setFormData((prev) => ({ ...prev, location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }));
+          toast({
+            title: 'Location detected',
+            description: 'Your current location has been set automatically.',
+          });
         },
-        () => {},
-        { enableHighAccuracy: true }
+        (error) => {
+          console.error('Geolocation error:', error);
+          let errorMessage = 'Unable to get your location. Please select it manually on the map.';
+          
+          if (error.code === error.PERMISSION_DENIED) {
+            errorMessage = 'Location permission denied. Please enable location access or select manually on the map.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMessage = 'Location information unavailable. Please select manually on the map.';
+          } else if (error.code === error.TIMEOUT) {
+            errorMessage = 'Location request timed out. Please select manually on the map.';
+          }
+          
+          toast({
+            title: 'Location not available',
+            description: errorMessage,
+            variant: 'default',
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
-  }, [reportDialogOpen]);
+  }, [reportDialogOpen, toast]);
 
   // Generate AI report and navigate to summary page
   const handleGenerateReport = async (e: React.FormEvent) => {
@@ -244,7 +265,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
   const handleViewDetails = async (issueId: string) => {
     try {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/issues/${issueId}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedIssue(data.data.issue);
@@ -316,12 +337,12 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
   return (
     <AppLayout>
-      <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="p-3 sm:p-4 md:p-8 max-w-7xl mx-auto">
         {/* Community Issues Section */}
-        <div className="mb-12">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-2">Community Issues</h2>
-            <p className="text-muted-foreground">Issues reported by others in your city - Vote to show support!</p>
+        <div className="mb-8 sm:mb-12">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Community Issues</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">Issues reported by others in your city - Vote to show support!</p>
           </div>
 
           {loadingIssues ? (
@@ -501,27 +522,27 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Report City Issues</h1>
-            <p className="text-muted-foreground">Help improve our community by reporting issues</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Report City Issues</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Help improve our community by reporting issues</p>
           </div>
           
           <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="lg" className="gap-2" onClick={() => setReportDialogOpen(true)}>
-                <Plus className="w-5 h-5" />
+              <Button size="lg" className="gap-2 w-full sm:w-auto" onClick={() => setReportDialogOpen(true)}>
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                 Report Issue
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Report a New Issue</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-lg sm:text-xl">Report a New Issue</DialogTitle>
+                <DialogDescription className="text-sm">
                   Fill in the details below to report a city issue
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleGenerateReport} className="space-y-4">
+              <form onSubmit={handleGenerateReport} className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Issue Title</Label>
                   <Input
@@ -533,7 +554,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     <Select
@@ -588,7 +609,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
 
                 <div className="space-y-2">
                   <Label>Location (Click on map to select)</Label>
-                  <div className="h-64 rounded-lg overflow-hidden border map-container">
+                  <div className="h-48 sm:h-64 rounded-lg overflow-hidden border map-container">
                     {mounted ? (
                       <Suspense fallback={<div className="h-full w-full flex items-center justify-center">Loading map...</div>}>
                         <MapClient
@@ -686,7 +707,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                   )}
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
+                <Button type="submit" className="w-full text-sm sm:text-base" size="lg">
                   Generate Report
                 </Button>
               </form>
