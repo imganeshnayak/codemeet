@@ -1,8 +1,15 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const axios = require('axios');
 
 async function testOpenRouter() {
-  const apiKey = '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';
-  const model = 'meta-llama/llama-3.3-70b-instruct:free';
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const model = process.env.OPENROUTER_MODEL || 'google/gemma-2-9b-it:free';
+
+  if (!apiKey) {
+    console.error('❌ Error: OPENROUTER_API_KEY not found in .env file');
+    return;
+  }
 
   console.log(`Testing OpenRouter with model: ${model}`);
 

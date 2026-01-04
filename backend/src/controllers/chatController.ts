@@ -166,7 +166,9 @@ REMEMBER: Always structure your responses clearly with headings, lists, and visu
         console.error('❌ OpenRouter request error:', err?.message || err);
         return res.status(502).json({ error: 'OpenRouter request failed', details: err?.message || String(err) });
       }
-    } else if (GEMINI_KEY && GEMINI_MODEL) {
+    }
+
+    if (!englishResponse && GEMINI_KEY && GEMINI_MODEL) {
       try {
         console.log('🔧 Using Gemini model (HTTP):', GEMINI_MODEL);
 
