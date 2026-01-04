@@ -137,6 +137,12 @@ REMEMBER: Always structure your responses clearly with headings, lists, and visu
     const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL;
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     const GEMINI_MODEL = process.env.GEMINI_MODEL;
+
+    // Debug logging
+    console.log('🔍 Chat Config Check:');
+    console.log('- OpenRouter Key:', OPENROUTER_KEY ? 'Set (starts with ' + OPENROUTER_KEY.substring(0, 10) + '...)' : 'MISSING');
+    console.log('- OpenRouter Model:', OPENROUTER_MODEL || 'MISSING');
+
     let finalResponse = '';
     let translationNote = '';
     let englishResponse = '';
@@ -168,107 +174,14 @@ REMEMBER: Always structure your responses clearly with headings, lists, and visu
       }
     }
 
-    if (!englishResponse && GEMINI_KEY && GEMINI_MODEL) {
-      try {
-        console.log('🔧 Using Gemini model (HTTP):', GEMINI_MODEL);
+    // START: Fallback providers REMOVED per user request (Strict OpenRouter Only)
 
-        // Build a plain-text prompt from messages for Gemini
-        const promptText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
-
-        // HTTP Implementation for Gemini
-        // Note: Different models use different endpoints. 
-        // gemini-pro uses v1beta/models/gemini-pro:generateContent
-        // others might use generateText. Trying generateContent as it is standard for current Gemini models.
-
-        let geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
-        let geminiPayload: any = {
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 512,
-          }
-        };
-
-        // Fallback for older models (PaLM 2 legacy) if model string suggests 'text-bison'
-        if (GEMINI_MODEL.includes('bison')) {
-          geminiUrl = `https://generativelanguage.googleapis.com/v1beta2/models/${encodeURIComponent(GEMINI_MODEL)}:generateText?key=${GEMINI_KEY}`;
-          geminiPayload = {
-            prompt: { text: promptText },
-            temperature: 0.2,
-            maxOutputTokens: 512,
-          };
-        }
-
-        const gRes = await axios.post(geminiUrl, geminiPayload, {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 30000,
-        });
-
-        const gData = gRes.data;
-        if (gRes.status >= 400) {
-          console.error('Gemini HTTP error', gRes.status, gData);
-          return res.status(502).json({ error: 'Gemini returned HTTP error', status: gRes.status, details: gData });
-        }
-
-        // Handle response shape for generateContent (Gemini)
-        let aiResp = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        // Handle response shape for generateText (PaLM 2 / older)
-        if (!aiResp) {
-          aiResp = gData?.candidates?.[0]?.content || gData?.output?.[0]?.content || gData?.generation?.[0]?.text || gData?.candidates?.[0]?.output?.[0]?.content || '';
-        }
-
-        if (!aiResp) {
-          console.error('❌ Unexpected Gemini HTTP response', gData);
-          return res.status(502).json({ error: 'Gemini returned unexpected response', details: gData });
-        }
-
-        console.log('✅ Gemini HTTP Response (English):', aiResp.substring(0, 120) + '...');
-        englishResponse = aiResp;
-
-      } catch (gErr: any) {
-        console.error('❌ Gemini request error:', gErr?.message || gErr);
-        if (gErr.response) {
-          console.error('Data:', gErr.response.data);
-        }
-        return res.status(502).json({ error: 'Gemini request failed', details: gErr?.message || String(gErr) });
-      }
-    } else {
-      // Use Hugging Face router endpoint with OpenAI SDK as fallback
-      const HF_TOKEN = process.env.HF_TOKEN;
-      const HF_MODEL = process.env.HF_MODEL;
-      if (!HF_TOKEN) {
-        console.error('❌ HF_TOKEN is missing from environment');
-        return res.status(500).json({ error: 'Hugging Face token not configured on server' });
-      }
-      if (!HF_MODEL) {
-        console.error('❌ HF_MODEL is missing from environment');
-        return res.status(500).json({ error: 'Hugging Face model not configured (set HF_MODEL)' });
-      }
-
-      console.log('🔧 Using Hugging Face router model:', HF_MODEL);
-
-      const client = new OpenAI({
-        baseURL: 'https://router.huggingface.co/v1',
-        apiKey: HF_TOKEN,
+    if (!englishResponse) {
+      console.error('❌ No response generated. OpenRouter failed or not configured.');
+      return res.status(500).json({
+        error: 'AI service unavailable',
+        details: 'OpenRouter configuration missing or request failed.'
       });
-
-      try {
-        const chatCompletion = await client.chat.completions.create({
-          model: HF_MODEL,
-          messages: messages.map(m => ({ role: m.role, content: m.content })),
-        });
-        const aiResponse = chatCompletion.choices?.[0]?.message?.content;
-        if (!aiResponse) {
-          console.error('❌ Unexpected Hugging Face router response', chatCompletion);
-          return res.status(502).json({ error: 'Hugging Face router returned unexpected response', details: chatCompletion });
-        }
-        console.log('✅ HF Router Response (English):', aiResponse.substring(0, 100) + '...');
-        englishResponse = aiResponse;
-      } catch (err: any) {
-        console.error('❌ Hugging Face router request error:', err?.message || err);
-        return res.status(502).json({ error: 'Hugging Face router request failed', details: err?.message || String(err) });
-      }
     }
 
     // By default use the English response as the baseline
