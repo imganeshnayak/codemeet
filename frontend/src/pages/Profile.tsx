@@ -301,37 +301,37 @@ const Profile = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row items-center gap-6">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6">
                 <div className="relative">
                   <img
                     src={profileData.avatar || user?.avatar}
                     alt={profileData.name || user?.name}
-                    className="w-24 h-24 rounded-full ring-4 ring-primary/20"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-primary/20"
                   />
                   <Button
                     size="icon"
-                    className="absolute bottom-0 right-0 rounded-full w-8 h-8"
+                    className="absolute bottom-0 right-0 rounded-full w-7 h-7 sm:w-8 sm:h-8"
                   >
-                    <Camera className="w-4 h-4" />
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
                 
                 <div className="flex-1 text-center md:text-left">
-                  <h1 className="text-3xl font-bold mb-2">{profileData.name || user?.name}</h1>
-                  <p className="text-muted-foreground mb-4">{profileData.email || user?.email}</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">{profileData.name || user?.name}</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">{profileData.email || user?.email}</p>
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    <Badge>Member since Oct 2025</Badge>
-                    <Badge variant="outline">{totalIssues} Issues Reported</Badge>
-                    <Badge variant="outline">{userStats.totalCommunities} Communities</Badge>
+                    <Badge className="text-xs">Member since Oct 2025</Badge>
+                    <Badge variant="outline" className="text-xs">{totalIssues} Issues Reported</Badge>
+                    <Badge variant="outline" className="text-xs">{userStats.totalCommunities} Communities</Badge>
                   </div>
                 </div>
                 
-                <Button variant="outline" onClick={handleLogout} className="gap-2">
-                  <LogOut className="w-4 h-4" />
+                <Button variant="outline" onClick={handleLogout} className="gap-2 w-full md:w-auto text-sm sm:text-base">
+                  <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Logout
                 </Button>
               </div>
@@ -344,31 +344,31 @@ const Profile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
           <Card>
             <CardHeader>
-              <CardTitle>Issue Statistics</CardTitle>
-              <CardDescription>Overview of your reported issues</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Issue Statistics</CardTitle>
+              <CardDescription className="text-sm">Overview of your reported issues</CardDescription>
             </CardHeader>
             <CardContent>
               {totalIssues === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-                    <span className="text-4xl">📊</span>
+                <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-muted rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                    <span className="text-3xl sm:text-4xl">📊</span>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">No Issues Reported Yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2">No Issues Reported Yet</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 px-4">
                     Start reporting issues in your community to see statistics here.
                   </p>
-                  <Button onClick={() => navigate('/report-summary')}>
+                  <Button onClick={() => navigate('/report-summary')} className="text-sm">
                     Report Your First Issue
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                   {/* Pie Chart */}
-                  <div className="h-[300px] flex items-center justify-center">
+                  <div className="h-[250px] sm:h-[300px] flex items-center justify-center">
                     {issueStats.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>

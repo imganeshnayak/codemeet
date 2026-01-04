@@ -78,23 +78,23 @@ const Signup = () => {
         className="flex flex-col md:flex-row min-h-screen"
       >
         {/* Left: form */}
-        <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-6">
+        <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-4 sm:p-6">
           <div className="w-full max-w-md">
-            <Link to="/" className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-lg bg-transparent flex items-center justify-center overflow-hidden">
-                <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-10 h-10 object-contain" />
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-transparent flex items-center justify-center overflow-hidden">
+                <img src="/awaaz logo .png" alt="Jan Awaaz logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold">Jan Awaaz</h1>
-                <p className="text-sm text-gray-500">City Services Platform</p>
+                <h1 className="text-lg sm:text-xl font-semibold">Jan Awaaz</h1>
+                <p className="text-xs sm:text-sm text-gray-500">City Services Platform</p>
               </div>
             </Link>
 
-            <div className="bg-white p-8 rounded-xl shadow-md">
-              <h2 className="text-2xl font-bold mb-1">Create Account</h2>
-              <p className="text-sm text-gray-500 mb-6">Join Jan Awaaz to report issues and engage with your community</p>
+            <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1">Create Account</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">Join Jan Awaaz to report issues and engage with your community</p>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-5">
                 <div>
                   <Label htmlFor="name" className="text-sm text-gray-700">Full Name</Label>
                   <Input
