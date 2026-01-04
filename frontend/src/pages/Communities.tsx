@@ -1,124 +1,295 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Send, MoreVertical, ArrowLeft } from 'lucide-react';
+import { Search, Send, MoreVertical, ArrowLeft, Plus, Loader2, Users, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import AppLayout from '@/components/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface Community {
-  id: string;
+  _id: string;
   name: string;
+  description: string;
   avatar: string;
-  lastMessage: string;
-  lastTime: string;
+  category: string;
+  isPublic: boolean;
+  memberCount: number;
   unreadCount: number;
-  members: number;
+  lastActivity: string;
+  createdBy: {
+    _id: string;
+    name: string;
+    avatar: string;
+  };
 }
 
 interface Message {
-  id: string;
-  sender: string;
-  senderAvatar: string;
+  _id: string;
   text: string;
-  timestamp: string;
-  isMe: boolean;
+  sender: {
+    _id: string;
+    name: string;
+    avatar: string;
+  };
+  type: 'text' | 'image' | 'file';
+  isEdited: boolean;
+  createdAt: string;
 }
 
-// Mock communities
-const mockCommunities: Community[] = [
-  {
-    id: '1',
-    name: 'Downtown Residents',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=DR',
-    lastMessage: 'Anyone know when the street fair is?',
-    lastTime: '10:45 AM',
-    unreadCount: 3,
-    members: 245,
-  },
-  {
-    id: '2',
-    name: 'Park Improvement Group',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=PIG',
-    lastMessage: 'Great turnout at the cleanup event!',
-    lastTime: 'Yesterday',
-    unreadCount: 0,
-    members: 128,
-  },
-  {
-    id: '3',
-    name: 'City Council Updates',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=CCU',
-    lastMessage: 'New zoning proposal posted',
-    lastTime: '2 days ago',
-    unreadCount: 1,
-    members: 1024,
-  },
-  {
-    id: '4',
-    name: 'Neighborhood Watch',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=NW',
-    lastMessage: 'Meeting scheduled for Thursday',
-    lastTime: '3 days ago',
-    unreadCount: 0,
-    members: 89,
-  },
-];
-
-// Mock messages for selected community
-const mockMessages: Message[] = [
-  {
-    id: '1',
-    sender: 'John Doe',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-    text: 'Hey everyone! Did anyone see the notice about the street fair?',
-    timestamp: '10:30 AM',
-    isMe: false,
-  },
-  {
-    id: '2',
-    sender: 'You',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Me',
-    text: 'Yes! It\'s scheduled for next Saturday at Central Park',
-    timestamp: '10:32 AM',
-    isMe: true,
-  },
-  {
-    id: '3',
-    sender: 'Sarah Smith',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-    text: 'Perfect! I\'ll be there with my family 🎉',
-    timestamp: '10:35 AM',
-    isMe: false,
-  },
-  {
-    id: '4',
-    sender: 'Mike Johnson',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',
-    text: 'Anyone know when the street fair is?',
-    timestamp: '10:45 AM',
-    isMe: false,
-  },
-];
+const API_BASE_URL = '/api';
 
 const Communities = () => {
+  const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoadingCommunities, setIsLoadingCommunities] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  // Create community form state
+  const [newCommunity, setNewCommunity] = useState({
+    name: '',
+    description: '',
+    category: 'general' as const,
+    isPublic: true
+  });
+  const [isCreatingCommunity, setIsCreatingCommunity] = useState(false);
 
-  const filteredCommunities = mockCommunities.filter((community) =>
-    community.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  // Scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Fetch communities
+  const fetchCommunities = async () => {
+    try {
+      setIsLoadingCommunities(true);
+      const token = localStorage.getItem('jan_awaaz_token');
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/communities?search=${searchQuery}`, {
+        headers
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setCommunities(data.data);
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to load communities',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching communities:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load communities',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingCommunities(false);
+    }
+  };
+
+  // Fetch messages for a community
+  const fetchMessages = async (communityId: string) => {
+    try {
+      setIsLoadingMessages(true);
+      const token = localStorage.getItem('jan_awaaz_token');
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/communities/${communityId}/messages`, {
+        headers
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setMessages(data.data);
+        
+        // Mark messages as read
+        if (isAuthenticated && token) {
+          await fetch(`${API_BASE_URL}/communities/${communityId}/messages/read`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          // Refresh communities to update unread count
+          fetchCommunities();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load messages',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Send a message
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() || !selectedCommunity || !isAuthenticated) return;
+
+    try {
+      setIsSendingMessage(true);
+      const token = localStorage.getItem('jan_awaaz_token');
+      
+      const res = await fetch(`${API_BASE_URL}/communities/${selectedCommunity._id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: messageInput })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setMessages([...messages, data.data]);
+        setMessageInput('');
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to send message',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  // Create new community
+  const handleCreateCommunity = async () => {
+    if (!newCommunity.name.trim() || !isAuthenticated) return;
+
+    try {
+      setIsCreatingCommunity(true);
+      const token = localStorage.getItem('jan_awaaz_token');
+      
+      const res = await fetch(`${API_BASE_URL}/communities`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newCommunity)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast({
+          title: 'Success',
+          description: 'Community created successfully!'
+        });
+        setIsCreateDialogOpen(false);
+        setNewCommunity({
+          name: '',
+          description: '',
+          category: 'general',
+          isPublic: true
+        });
+        fetchCommunities();
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to create community',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error creating community:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create community',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsCreatingCommunity(false);
+    }
+  };
+
+  // Load communities on mount and when search changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchCommunities();
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Load messages when community is selected
+  useEffect(() => {
+    if (selectedCommunity) {
+      fetchMessages(selectedCommunity._id);
+    }
+  }, [selectedCommunity]);
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = diff / (1000 * 60 * 60);
     
-    // In a real app, this would send the message
-    console.log('Sending message:', messageInput);
-    setMessageInput('');
+    if (hours < 1) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (hours < 24) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    if (hours < 48) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -132,7 +303,74 @@ const Communities = () => {
         >
           {/* Header */}
           <div className="p-4 border-b border-border">
-            <h1 className="text-2xl font-bold mb-3">Communities</h1>
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-2xl font-bold">Communities</h1>
+              {isAuthenticated && (
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="icon" variant="default">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Community</DialogTitle>
+                      <DialogDescription>
+                        Start a new community to connect with others
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Community Name *</Label>
+                        <Input
+                          id="name"
+                          placeholder="Downtown Residents"
+                          value={newCommunity.name}
+                          onChange={(e) => setNewCommunity({ ...newCommunity, name: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="A community for downtown residents to discuss local issues..."
+                          value={newCommunity.description}
+                          onChange={(e) => setNewCommunity({ ...newCommunity, description: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Category</Label>
+                        <Select
+                          value={newCommunity.category}
+                          onValueChange={(value: any) => setNewCommunity({ ...newCommunity, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="neighborhood">Neighborhood</SelectItem>
+                            <SelectItem value="city-wide">City-Wide</SelectItem>
+                            <SelectItem value="interest-group">Interest Group</SelectItem>
+                            <SelectItem value="emergency">Emergency</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        onClick={handleCreateCommunity}
+                        disabled={!newCommunity.name.trim() || isCreatingCommunity}
+                      >
+                        {isCreatingCommunity && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
+                        Create Community
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -146,40 +384,71 @@ const Communities = () => {
 
           {/* Communities List */}
           <div className="flex-1 overflow-y-auto">
-            {filteredCommunities.map((community) => (
-              <motion.div
-                key={community.id}
-                whileHover={{ backgroundColor: 'hsl(var(--accent) / 0.5)' }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedCommunity(community)}
-                className={`p-4 border-b border-border cursor-pointer smooth-transition ${
-                  selectedCommunity?.id === community.id ? 'bg-accent/50' : ''
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={community.avatar} />
-                    <AvatarFallback>{community.name[0]}</AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold truncate">{community.name}</h3>
-                      <span className="text-xs text-muted-foreground">{community.lastTime}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground truncate">{community.lastMessage}</p>
-                      {community.unreadCount > 0 && (
-                        <Badge className="ml-2 notification-dot rounded-full w-5 h-5 flex items-center justify-center p-0 text-xs">
-                          {community.unreadCount}
+            {isLoadingCommunities ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : communities.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Users className="w-12 h-12 text-muted-foreground mb-3" />
+                <h3 className="font-semibold mb-1">No communities found</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {searchQuery ? 'Try a different search' : 'Be the first to create one!'}
+                </p>
+                {isAuthenticated && !searchQuery && (
+                  <Button onClick={() => setIsCreateDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Community
+                  </Button>
+                )}
+              </div>
+            ) : (
+              communities.map((community) => (
+                <motion.div
+                  key={community._id}
+                  whileHover={{ backgroundColor: 'hsl(var(--accent) / 0.5)' }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCommunity(community)}
+                  className={`p-4 border-b border-border cursor-pointer smooth-transition ${
+                    selectedCommunity?._id === community._id ? 'bg-accent/50' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={community.avatar} />
+                      <AvatarFallback>{community.name[0]}</AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold truncate">{community.name}</h3>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimestamp(community.lastActivity)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground truncate line-clamp-1">
+                          {community.description || 'No description'}
+                        </p>
+                        {community.unreadCount > 0 && (
+                          <Badge className="ml-2 notification-dot rounded-full w-5 h-5 flex items-center justify-center p-0 text-xs">
+                            {community.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs capitalize">
+                          {community.category.replace('-', ' ')}
                         </Badge>
-                      )}
+                        <p className="text-xs text-muted-foreground">
+                          {community.memberCount} {community.memberCount === 1 ? 'member' : 'members'}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{community.members} members</p>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
 
@@ -204,7 +473,9 @@ const Communities = () => {
               
               <div className="flex-1">
                 <h2 className="font-semibold">{selectedCommunity.name}</h2>
-                <p className="text-xs text-muted-foreground">{selectedCommunity.members} members</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedCommunity.memberCount} {selectedCommunity.memberCount === 1 ? 'member' : 'members'}
+                </p>
               </div>
               
               <Button variant="ghost" size="icon">
@@ -214,55 +485,97 @@ const Communities = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {mockMessages.map((message, index) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`flex gap-3 ${message.isMe ? 'flex-row-reverse' : ''}`}
-                >
-                  {!message.isMe && (
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={message.senderAvatar} />
-                      <AvatarFallback>{message.sender[0]}</AvatarFallback>
-                    </Avatar>
-                  )}
-                  
-                  <div className={`flex flex-col ${message.isMe ? 'items-end' : 'items-start'}`}>
-                    {!message.isMe && (
-                      <span className="text-xs font-medium text-muted-foreground mb-1">
-                        {message.sender}
-                      </span>
-                    )}
-                    <div
-                      className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                        message.isMe
-                          ? 'chat-bubble-sent'
-                          : 'chat-bubble-received border border-border'
-                      }`}
-                    >
-                      <p className="text-sm">{message.text}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground mt-1">{message.timestamp}</span>
-                  </div>
-                </motion.div>
-              ))}
+              {isLoadingMessages ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <MessageSquare className="w-12 h-12 text-muted-foreground mb-3" />
+                  <h3 className="font-semibold mb-1">No messages yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Be the first to send a message in this community!
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {messages.map((message, index) => {
+                    const isMe = user && message.sender._id === user.id;
+                    return (
+                      <motion.div
+                        key={message._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}
+                      >
+                        {!isMe && (
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={message.sender.avatar} />
+                            <AvatarFallback>{message.sender.name[0]}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        
+                        <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                          {!isMe && (
+                            <span className="text-xs font-medium text-muted-foreground mb-1">
+                              {message.sender.name}
+                            </span>
+                          )}
+                          <div
+                            className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                              isMe
+                                ? 'chat-bubble-sent'
+                                : 'chat-bubble-received border border-border'
+                            }`}
+                          >
+                            <p className="text-sm">{message.text}</p>
+                            {message.isEdited && (
+                              <span className="text-xs text-muted-foreground italic"> (edited)</span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1">
+                            {formatTimestamp(message.createdAt)}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
             </div>
 
             {/* Message Input */}
             <div className="p-4 border-t border-border bg-card">
-              <form onSubmit={handleSendMessage} className="flex gap-2">
-                <Input
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1"
-                />
-                <Button type="submit" size="icon" disabled={!messageInput.trim()}>
-                  <Send className="w-4 h-4" />
-                </Button>
-              </form>
+              {isAuthenticated ? (
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                  <Input
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1"
+                    disabled={isSendingMessage}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    disabled={!messageInput.trim() || isSendingMessage}
+                  >
+                    {isSendingMessage ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-sm text-muted-foreground">
+                    Please login to send messages
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ) : (
