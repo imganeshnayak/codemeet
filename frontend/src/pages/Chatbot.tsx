@@ -17,10 +17,22 @@ export default function Chatbot() {
   // Initialize sessionId immediately instead of null
   const [sessionId] = useState<string>(() => `chatbot-${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const typingTimerRef = useRef<number | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showSpline, setShowSpline] = useState(true);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Cleanup typing timer on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimerRef.current) {
+        window.clearTimeout(typingTimerRef.current);
+      }
+    };
+  }, []);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -52,13 +64,37 @@ export default function Chatbot() {
       setMessages((m) => [...m, errMsg]);
     } finally {
       setIsSending(false);
+      // After response arrives, restore spline if user isn't typing
+      setTimeout(() => {
+        setShowSpline(!isTyping);
+      }, 200);
     }
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (isSending) return;
+    // When user sends a message, hide the spline assistant to the side
+    setIsTyping(false);
+    setShowSpline(false);
     sendMessage(inputValue);
+  };
+
+  // Manage typing state with a short debounce
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (typingTimerRef.current) {
+      window.clearTimeout(typingTimerRef.current);
+    }
+    // mark typing true immediately when user types
+    setIsTyping(Boolean(value));
+    setShowSpline(false);
+    // when user stops typing for 1.2s, consider typing finished
+    typingTimerRef.current = window.setTimeout(() => {
+      setIsTyping(false);
+      // only show spline when not sending
+      if (!isSending) setShowSpline(true);
+    }, 1200);
   };
 
   return (
@@ -121,6 +157,25 @@ export default function Chatbot() {
             </Card>
           </div>
         ))}
+
+        {/* Typing indicator shown while awaiting bot response */}
+        {isSending && (
+          <div className="flex justify-start">
+            <Card className="max-w-xs md:max-w-lg bg-muted/40">
+              <CardContent className="p-3 prose prose-sm max-w-none dark:prose-invert">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-200" />
+                  <div aria-live="polite" className="flex items-center">
+                    <span className="typing-dot inline-block w-2 h-2 bg-foreground rounded-full mr-1" />
+                    <span className="typing-dot inline-block w-2 h-2 bg-foreground rounded-full mr-1" />
+                    <span className="typing-dot inline-block w-2 h-2 bg-foreground rounded-full" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -130,12 +185,16 @@ export default function Chatbot() {
           placeholder="Type your message..."
           className="flex-1"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleSubmit();
             }
+          }}
+          onFocus={() => {
+            // when input focused, show spline only if not typing
+            if (!isTyping && !isSending) setShowSpline(true);
           }}
         />
         <Button variant="outline" size="icon" type="button" onClick={() => !isSending && sendMessage(inputValue)}>
@@ -145,46 +204,19 @@ export default function Chatbot() {
           <Send className="w-4 h-4" />
         </Button>
 
-        {/* Small robot iframe next to the send button (kept visually) */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-12 h-12 md:w-14 md:h-14 overflow-hidden bg-transparent"
-        >
-          <div className="relative w-full h-full">
-            <iframe
-              src="https://my.spline.design/greetingrobot-S0D5T8vmFbhMNtZ3WcbXZpdw/?embed=1&ui=0&background=transparent&branding=0"
-              width="100%"
-              height="100%"
-              title="AI Robot Assistant"
-              allowFullScreen
-              style={{ border: 0, background: 'transparent' }}
-            />
-
-            {/* Visual mask to hide Spline watermark/branding area (visual hack) */}
-            <div
-              aria-hidden="true"
-              className="absolute"
-              style={{
-                right: 0,
-                bottom: 0,
-                width: '60%',
-                height: '20%',
-                background: 'linear-gradient(transparent, rgba(255,255,255,0.98))',
-                pointerEvents: 'none'
-              }}
-            />
-          </div>
-        </motion.div>
-      </form>
+        {/* Small Spline robot removed to avoid duplicate appearance */}
+        </form>
 
       {/* Floating 3D Robot Assistant */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
+        animate={{
+          opacity: showSpline ? 1 : 0.25,
+          x: showSpline ? 0 : 180
+        }}
+        transition={{ duration: 0.45 }}
         className="absolute bottom-20 right-4 w-40 h-40 md:w-56 md:h-56 overflow-hidden bg-transparent"
+        aria-hidden={!showSpline}
       >
         <iframe
           src="https://my.spline.design/greetingrobot-S0D5T8vmFbhMNtZ3WcbXZpdw/"
@@ -198,4 +230,21 @@ export default function Chatbot() {
     </div>
     </AppLayout>
   );
+}
+
+// Inline styles for typing animation (scoped to this module)
+const style = `
+.typing-dot { opacity: 0.3; animation: typing 1s infinite; }
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing { 0% { transform: translateY(0); opacity: 0.3 } 50% { transform: translateY(-4px); opacity: 1 } 100% { transform: translateY(0); opacity: 0.3 } }
+`;
+
+// Inject the style tag into the document head when this module loads
+if (typeof document !== 'undefined') {
+  const s = document.createElement('style');
+  s.setAttribute('data-from', 'chatbot-typing');
+  s.innerHTML = style;
+  document.head.appendChild(s);
 }

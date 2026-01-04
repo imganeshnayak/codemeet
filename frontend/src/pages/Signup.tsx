@@ -155,14 +155,14 @@ const Signup = () => {
                   </Button>
                 </div>
 
-                <p className="text-sm text-center text-gray-500">Already have an account? <Link to="/login" className="text-green-600 font-medium">Sign in</Link></p>
+                <p className="text-sm text-center text-gray-500">Already have an account? <Link to="/login" className="text-gray-600 font-medium">Sign in</Link></p>
               </form>
             </div>
           </div>
         </div>
 
         {/* Right: decorative panel */}
-        <div className="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gradient-to-br from-green-700 to-green-400 p-8">
+        <div className="w-full md:w-1/2 hidden md:flex items-center justify-center bg-gradient-to-br from-gray-700 to-green-400 p-8">
           <div className="max-w-lg text-white text-center px-6">
             <h3 className="text-3xl font-extrabold mb-4">Join your community</h3>
             <p className="mb-6 opacity-90">Create an account to report and track city issues, and collaborate with neighbors.</p>
@@ -170,8 +170,8 @@ const Signup = () => {
               <svg viewBox="0 0 600 400" className="w-full h-full opacity-90">
                 <defs>
                   <linearGradient id="g2" x1="0" x2="1">
-                    <stop offset="0" stopColor="#10b981" />
-                    <stop offset="1" stopColor="#047857" />
+                    <stop offset="0" stopColor="#5318e7ff" />
+                    <stop offset="1" stopColor="#990ec8ff" />
                   </linearGradient>
                 </defs>
                 <rect x="0" y="0" width="600" height="400" rx="24" fill="url(#g2)" opacity="0.0" />

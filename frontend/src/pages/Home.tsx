@@ -59,7 +59,46 @@ const Home = () => {
     location: { lat: 40.7128, lng: -74.0060 },
     address: '',
   });
+  const [localImages, setLocalImages] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('report_images') || '[]'); } catch { return []; }
+  });
   const { toast } = useToast();
+
+  // Image upload limits
+  const MAX_IMAGES = 3;
+  const MAX_IMAGE_BYTES = 300 * 1024; // 300 KB per image after compression
+
+  // Compress image file to JPEG Data URL with given max width and quality
+  const compressImage = (file: File, maxWidth = 1024, quality = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onerror = (err) => reject(err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = String(reader.result);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+
+      img.onload = () => {
+        const ratio = img.width / img.height;
+        const targetWidth = Math.min(img.width, maxWidth);
+        const targetHeight = Math.round(targetWidth / ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas not supported'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+        // Export as JPEG to reduce size
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+    });
+  };
 
   // Automatically capture geolocation when opening the report modal
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -131,9 +170,12 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
     } catch (err) {
       aiSummary = 'AI summary could not be generated.';
     }
-    // For demo, photos are not handled yet
-    const report = { ...formData, aiSummary, photos: [] };
-    navigate('/report-summary', { state: { report } });
+  // Include images stored in localStorage when generating the report
+  const report = { ...formData, aiSummary, photos: localImages };
+  navigate('/report-summary', { state: { report } });
+  // clear local images after generating report to avoid stale data
+  setLocalImages([]);
+  localStorage.removeItem('report_images');
   };
 
   // client-only flag to avoid rendering react-leaflet during SSR/hydration
@@ -573,11 +615,75 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
                 <div className="space-y-2">
                   <Label htmlFor="photo">Photo (optional)</Label>
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" className="w-full">
-                      <Camera className="w-4 h-4 mr-2" />
-                      Upload Photo
-                    </Button>
+                    <input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={async (e) => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        // enforce max images
+                        if (localImages.length >= MAX_IMAGES) {
+                          toast({ title: 'Image limit', description: `You can attach up to ${MAX_IMAGES} images.`, variant: 'destructive' });
+                          (e.target as HTMLInputElement).value = '';
+                          return;
+                        }
+
+                        const arr: string[] = [];
+                        for (let i = 0; i < files.length; i++) {
+                          if (localImages.length + arr.length >= MAX_IMAGES) break;
+                          const f = files[i];
+                          try {
+                            const compressed = await compressImage(f, 1024, 0.75);
+                            // measure bytes
+                            const b64 = compressed.split(',')[1] || '';
+                            const bytes = (b64.length * 3) / 4; // approximate
+                            if (bytes > MAX_IMAGE_BYTES) {
+                              toast({ title: 'Image too large', description: `${f.name} is too large after compression. Try a smaller image.`, variant: 'destructive' });
+                              continue;
+                            }
+                            arr.push(compressed);
+                          } catch (err) {
+                            console.error('Image compression failed', err);
+                            toast({ title: 'Image error', description: `Failed to process ${f.name}`, variant: 'destructive' });
+                          }
+                        }
+                        if (arr.length === 0) {
+                          (e.target as HTMLInputElement).value = '';
+                          return;
+                        }
+                        const next = [...localImages, ...arr].slice(0, MAX_IMAGES);
+                        setLocalImages(next);
+                        localStorage.setItem('report_images', JSON.stringify(next));
+                        // clear input
+                        (e.target as HTMLInputElement).value = '';
+                      }}
+                      className="w-full"
+                    />
                   </div>
+                  {/* previews */}
+                  <div className="text-xs text-muted-foreground mt-1">You can attach up to 3 images. Images are compressed client-side.</div>
+                  {localImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {localImages.map((src, idx) => (
+                        <div key={idx} className="relative">
+                          <img src={src} alt={`preview-${idx}`} className="w-full h-24 object-cover rounded" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = localImages.filter((_, i) => i !== idx);
+                              setLocalImages(next);
+                              localStorage.setItem('report_images', JSON.stringify(next));
+                            }}
+                            className="absolute top-1 right-1 bg-white/80 rounded-full p-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <Button type="submit" className="w-full" size="lg">
