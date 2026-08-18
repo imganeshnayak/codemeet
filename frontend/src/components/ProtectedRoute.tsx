@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -23,10 +23,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         </motion.div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

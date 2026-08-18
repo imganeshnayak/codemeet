@@ -4,7 +4,7 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 
 const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token } = useAdminAuth();
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/admin/login" replace />;
   return <>{children}</>;
 };
 

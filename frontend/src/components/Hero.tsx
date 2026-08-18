@@ -42,7 +42,7 @@ const Hero = ({ hero }: HeroProps) => {
               Empowering citizens with a smart, transparent, and collaborative platform for civic issue reporting and resolution.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/signup">
+              <Link to="/home">
                 <Button
                   variant="hero"
                   size="lg"
@@ -52,14 +52,14 @@ const Hero = ({ hero }: HeroProps) => {
                   <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </Link>
-              <Link to="/login" className="w-full sm:w-auto">
+              <Link to="/home" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
                   className="text-sm sm:text-base md:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto w-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:text-white"
                 >
                   <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                  Login
+                  Enter Platform
                 </Button>
               </Link>
             </div>

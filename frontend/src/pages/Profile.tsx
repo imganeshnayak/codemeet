@@ -89,15 +89,11 @@ const Profile = () => {
     try {
       setIsLoadingProfile(true);
       const token = localStorage.getItem('jan_awaaz_token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
 
       const res = await fetch(`${API_BASE_URL}/profile`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       });
 
@@ -176,7 +172,7 @@ const Profile = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           name: profileData.name,
@@ -225,7 +221,7 @@ const Profile = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ [key]: value }),
       });
@@ -260,7 +256,7 @@ const Profile = () => {
       title: 'Logged Out',
       description: 'You have been successfully logged out.',
     });
-    navigate('/login');
+    navigate('/home');
   };
 
   // Calculate issue statistics for the chart

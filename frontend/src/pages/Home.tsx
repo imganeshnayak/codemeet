@@ -254,7 +254,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
     try {
       const token = localStorage.getItem('jan_awaaz_token');
       if (!token) {
-        toast({ title: 'Authentication Required', description: 'Please log in to vote.', variant: 'destructive' });
+        toast({ title: 'Unavailable', description: 'Voting is not available right now.', variant: 'destructive' });
         return;
       }
 
@@ -329,7 +329,7 @@ Coordinates: ${formData.location.lat}, ${formData.location.lng}`;
       setIsSubmittingComment(true);
       const token = localStorage.getItem('jan_awaaz_token');
       if (!token) {
-        toast({ title: 'Authentication Required', description: 'Please log in to comment.', variant: 'destructive' });
+        toast({ title: 'Unavailable', description: 'Comments are not available right now.', variant: 'destructive' });
         return;
       }
 

@@ -220,6 +220,14 @@ const Communities = () => {
     try {
       setIsCreatingCommunity(true);
       const token = localStorage.getItem('jan_awaaz_token');
+      if (!token) {
+        toast({
+          title: 'Unavailable',
+          description: 'Community creation is not available right now.',
+          variant: 'destructive'
+        });
+        return;
+      }
       
       const res = await fetch(`${API_BASE_URL}/communities`, {
         method: 'POST',
@@ -305,71 +313,69 @@ const Communities = () => {
           <div className="p-3 sm:p-4 border-b border-border">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
               <h1 className="text-xl sm:text-2xl font-bold">Communities</h1>
-              {isAuthenticated && (
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="icon" variant="default" className="h-9 w-9 sm:h-10 sm:w-10">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-[95vw] sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg sm:text-xl">Create New Community</DialogTitle>
-                      <DialogDescription className="text-sm">
-                        Start a new community to connect with others
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Community Name *</Label>
-                        <Input
-                          id="name"
-                          placeholder="Downtown Residents"
-                          value={newCommunity.name}
-                          onChange={(e) => setNewCommunity({ ...newCommunity, name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          placeholder="A community for downtown residents to discuss local issues..."
-                          value={newCommunity.description}
-                          onChange={(e) => setNewCommunity({ ...newCommunity, description: e.target.value })}
-                          rows={3}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="category">Category</Label>
-                        <Select
-                          value={newCommunity.category}
-                          onValueChange={(value: any) => setNewCommunity({ ...newCommunity, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="general">General</SelectItem>
-                            <SelectItem value="neighborhood">Neighborhood</SelectItem>
-                            <SelectItem value="city-wide">City-Wide</SelectItem>
-                            <SelectItem value="interest-group">Interest Group</SelectItem>
-                            <SelectItem value="emergency">Emergency</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="icon" variant="default" className="h-9 w-9 sm:h-10 sm:w-10">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg sm:text-xl">Create New Community</DialogTitle>
+                    <DialogDescription className="text-sm">
+                      Start a new community to connect with others
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Community Name *</Label>
+                      <Input
+                        id="name"
+                        placeholder="Downtown Residents"
+                        value={newCommunity.name}
+                        onChange={(e) => setNewCommunity({ ...newCommunity, name: e.target.value })}
+                      />
                     </div>
-                    <DialogFooter>
-                      <Button
-                        onClick={handleCreateCommunity}
-                        disabled={!newCommunity.name.trim() || isCreatingCommunity}
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="A community for downtown residents to discuss local issues..."
+                        value={newCommunity.description}
+                        onChange={(e) => setNewCommunity({ ...newCommunity, description: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select
+                        value={newCommunity.category}
+                        onValueChange={(value: any) => setNewCommunity({ ...newCommunity, category: value })}
                       >
-                        {isCreatingCommunity && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-                        Create Community
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="neighborhood">Neighborhood</SelectItem>
+                          <SelectItem value="city-wide">City-Wide</SelectItem>
+                          <SelectItem value="interest-group">Interest Group</SelectItem>
+                          <SelectItem value="emergency">Emergency</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      onClick={handleCreateCommunity}
+                      disabled={!newCommunity.name.trim() || isCreatingCommunity}
+                    >
+                      {isCreatingCommunity && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
+                      Create Community
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -395,7 +401,7 @@ const Communities = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   {searchQuery ? 'Try a different search' : 'Be the first to create one!'}
                 </p>
-                {isAuthenticated && !searchQuery && (
+                {!searchQuery && (
                   <Button onClick={() => setIsCreateDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Community

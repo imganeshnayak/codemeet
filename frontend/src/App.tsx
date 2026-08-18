@@ -5,12 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminLayout from "./components/AdminLayout";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Chatbot from "./pages/Chatbot";
 import Communities from "./pages/Communities";
@@ -40,14 +37,13 @@ const App = () => (
             <Route element={<AuthProvider><Outlet /></AuthProvider>}>
               {/* Public User Routes */}
               <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              {/* Protected User Routes */}
-              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
-              <Route path="/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/report-summary" element={<ProtectedRoute><ReportSummary /> </ProtectedRoute>} />
+              <Route path="/login" element={<Navigate to="/home" replace />} />
+              <Route path="/signup" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/communities" element={<Communities />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/report-summary" element={<ReportSummary />} />
             </Route>
             
             {/* Admin Routes - All wrapped in AdminAuthProvider */}
